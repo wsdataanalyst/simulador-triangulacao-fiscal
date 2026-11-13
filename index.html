@@ -295,7 +295,8 @@ const EMITENTE = {
   tipo: 'COMÉRCIO DE MATERIAL ELÉTRICO • FORTALEZA/CE',
   cnpj: '02.403.486/0001-34',
   uf: 'CE',
-  municipio: 'Fortaleza'
+  municipio: 'Fortaleza',
+  industria: false   /* true = fabricante (CFOPs x.101/x.118/x.401); false = comércio (x.102/x.119/x.403) */
 };
 
 const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -494,6 +495,7 @@ function validar({ b, e }) {
   return errs;
 }
 const pre = (uf) => uf === EMITENTE.uf ? '5' : '6';
+const cfopPar = (p, prod, rev, sufixo = '') => EMITENTE.industria ? `${p}.${prod} (produção própria) / ${p}.${rev} (revenda)${sufixo}` : `${p}.${rev} (mercadoria adquirida de terceiros)${sufixo}`;
 const difal = (uf) => (ALIQ_INTERNA[uf] ?? 18) - ALIQ_INTER;
 const nomeOu = (n, fb) => n || fb;
 const cnpjTxt = (d) => d.length === 14 ? fmtCNPJ(d) : (d.length === 11 ? fmtCPF(d) : '—');
@@ -503,7 +505,7 @@ function icmsVendaDireta(destUF, contrib, consumoFinal, st) {
   const interno = destUF === EMITENTE.uf;
   const linhas = [];
   if (interno) linhas.push(`ICMS próprio destacado à alíquota interna do ${EMITENTE.uf}: <b>${pct(ALIQ_INTERNA[EMITENTE.uf])}</b> (verificar alíquota específica do produto/NCM e eventuais reduções de base).`);
-  else linhas.push(`ICMS próprio destacado à alíquota interestadual: <b>${pct(ALIQ_INTER)}</b> (4% se mercadoria importada — Res. SF 13/2012).`);
+  else linhas.push(`ICMS próprio destacado à alíquota interestadual: <b>${pct(ALIQ_INTER)}</b> — Res. Senado 22/1989: saída do ${EMITENTE.uf} (Nordeste) é 12% para qualquer UF; os 7% só existem quando a origem é Sul/Sudeste. 4% se mercadoria importada (Res. SF 13/2012).`);
   if (!interno && !contrib) linhas.push(`<b>DIFAL devido pelo remetente</b> à UF de destino (EC 87/2015 • LC 190/2022 • Conv. ICMS 236/2021): alíquota interna ${destUF} ${pct(ALIQ_INTERNA[destUF] ?? 18)} − ${pct(ALIQ_INTER)} = <b>${pct(difal(destUF))}</b> (base dupla se exigida pela UF; recolher por GNRE ou inscrição de substituto na UF).`);
   if (!interno && contrib && consumoFinal) linhas.push(`<b>DIFAL devido pelo destinatário</b> (contribuinte adquirindo para uso/consumo/ativo — CF art. 155, §2º, VII): ${pct(difal(destUF))} recolhido pelo comprador em ${destUF}, salvo Convênio/Protocolo que atribua ST ao remetente.`);
   if (st) {
@@ -517,10 +519,10 @@ function icmsVendaDireta(destUF, contrib, consumoFinal, st) {
 }
 function cfopVendaDireta(destUF, contrib, consumoFinal, st) {
   const p = pre(destUF); const interno = p === '5';
-  if (!interno && !contrib) return `${p}.107 (produção própria) / ${p}.108 (revenda) — venda a não contribuinte`;
-  if (st && !consumoFinal) return `${p}.401 (produção própria) / ${p}.403 (revenda) — substituto tributário`;
-  if (st && !interno && contrib && consumoFinal) return `${p}.401 / ${p}.403 se ST-DIFAL por Protocolo; senão ${p}.101 / ${p}.102`;
-  return `${p}.101 (produção própria) / ${p}.102 (revenda)`;
+  if (!interno && !contrib) return cfopPar(p, '107', '108', ' — venda a não contribuinte');
+  if (st && !consumoFinal) return cfopPar(p, '401', '403', ' — substituto tributário');
+  if (st && !interno && contrib && consumoFinal) return `${cfopPar(p, '401', '403')} se ST-DIFAL por Protocolo; senão ${cfopPar(p, '101', '102')}`;
+  return cfopPar(p, '101', '102');
 }
 function camposNFe(destUF, contrib, consumoFinal, extra = []) {
   return [
@@ -620,8 +622,8 @@ function avaliar(inp) {
     R.badge = { cls: 'ok', txt: 'VENDA À ORDEM • ART. 40' };
     R.titulo = 'Venda à ordem — triangulação com três notas fiscais';
     R.desc = 'B (adquirente originário) compra de A e revende a C; A entrega diretamente a C por conta e ordem de B.';
-    R.base = 'Base Legal: <b>Convênio SINIEF s/nº de 1970, art. 40, §3º</b> (venda à ordem) • <b>Ajuste SINIEF 07/2005</b> (NF-e) • <b>RICMS/CE</b>' + (st ? ' • <b>Conv. ICMS 142/2018</b>' : '');
-    R.fluxo = [A, { arrow: 'Remessa simbólica', sub: `NF ${pre(b.uf)}.118/.119` }, B, { arrow: 'Venda de B', sub: `NF ${pBC}.120` }, C];
+    R.base = 'Base Legal: <b>Convênio SINIEF s/nº de 1970, art. 40, §3º</b> (venda à ordem) • <b>RICMS/CE – Decreto 24.569/1997, art. 705, §5º</b> • <b>Pareceres CECON/SEFAZ-CE nº 1.075/2023 e 1.410/2024</b> (sigilo comercial na remessa) • <b>Ajuste SINIEF 07/2005</b> (NF-e)' + (st ? ' • <b>Conv. ICMS 142/2018</b>' : '');
+    R.fluxo = [A, { arrow: 'Remessa simbólica', sub: `NF ${pre(b.uf)}.${EMITENTE.industria ? '118' : '119'}` }, B, { arrow: 'Venda de B', sub: `NF ${pBC}.120` }, C];
     R.steps.push({
       titulo: 'NF-e de Venda do adquirente originário para o destinatário', who: `Emitente: <b>B (${esc(B.n)})</b> → Destinatário: <b>C (${esc(C.n)})</b> — <i>responsabilidade do cliente comprador</i>`,
       kv: [['Natureza', 'Venda à ordem'], ['CFOP', `${pBC}.120 — Venda de mercadoria adquirida de terceiros, entregue ao destinatário pelo vendedor remetente, em venda à ordem${st ? ` (se ST já retida por A: ${pBC === '5' ? '5.405' : '6.404'})` : ''}`], ['ICMS', `Destaque conforme regra de B (${st ? 'sem destaque próprio se substituído com ST retida' : 'débito normal'})${consumoC && b.uf !== e.uf ? ' + DIFAL de B para a UF de C' : ''}`], ['Inf. complementares', `"Mercadoria a ser entregue por ${esc(EMITENTE.rotulo)}, CNPJ ${EMITENTE.cnpj}, IE [IE de A], ${EMITENTE.municipio}/${EMITENTE.uf}"`], ['Transporte', 'Sem dados de transporte (entrega feita por A) — <code>modFrete</code> conforme contrato B→C']],
@@ -631,12 +633,12 @@ function avaliar(inp) {
     R.steps.push({
       titulo: 'NF-e de Remessa por Conta e Ordem de Terceiros (acompanha o transporte)', who: `Emitente: <b>A (remetente)</b> → Destinatário: <b>C (${esc(C.n)})</b>`,
       kv: [['Natureza', '"Remessa por Conta e Ordem de Terceiros" (art. 40, §3º, II, "a")'], ['CFOP', `${pre(e.uf)}.923 — Remessa de mercadoria por conta e ordem de terceiros, em venda à ordem`], ['ICMS', '<b>Sem destaque</b> de ICMS/ST (CST 41 – Não tributada; Simples: CSOSN 400)'], ['NF referenciada', 'Chave da NF-e de venda B→C (grupo <code>&lt;refNFe&gt;</code>)'], ['Inf. complementares', `"Remessa por conta e ordem de ${esc(B.n)}, CNPJ ${cnpjTxt(b.cnpj)}, IE [IE de B], ${local(b.mun, b.uf)}, conforme NF-e nº [n], série [s], de [data]"`], ['Transporte', 'Transportador, placa e volumes — esta nota acompanha a mercadoria']],
-      icms: [`Valor dos produtos: o mesmo da operação, apenas para fins de controle (sem tributação).`, pf ? 'Destinatário pessoa física: informar CPF e endereço da obra/residência onde a mercadoria será entregue.' : ''].filter(Boolean),
+      icms: [`<b>Valor da nota (sigilo comercial):</b> pode ser emitida com o valor da NF de venda B→C <b>ou com valor zero</b>, neste caso consignando em Informações Complementares: <i>"Valor desta operação é o indicado na Nota Fiscal nº [n] de [emitente B]"</i> — Pareceres CECON/SEFAZ-CE nº 1.075/2023 e 1.410/2024 (RICMS/CE, art. 705, §5º). Assim C não vê o preço praticado entre A e B.`, pf ? 'Destinatário pessoa física: informar CPF e endereço da obra/residência onde a mercadoria será entregue.' : ''].filter(Boolean),
       campos: camposNFe(e.uf, e.contrib, consumoC, ['<code>finNFe</code> = 1 • <code>indPres</code> = 9'])
     });
     R.steps.push({
       titulo: 'NF-e de Remessa Simbólica – Venda à Ordem (nota de faturamento)', who: `Emitente: <b>A (remetente)</b> → Destinatário: <b>B (${esc(B.n)})</b>`,
-      kv: [['Natureza', '"Remessa Simbólica – Venda à Ordem" (art. 40, §3º, II, "b")'], ['CFOP', `${pre(b.uf)}.118 (produção própria) / ${pre(b.uf)}.119 (adquirida de terceiros)`], ['ICMS', '<b>Com destaque</b> do ICMS próprio' + (st ? ' <b>e do ICMS-ST</b> (A como substituto)' : '')], ['NF referenciada', 'Chave da NF-e de remessa A→C (grupo <code>&lt;refNFe&gt;</code>)'], ['Inf. complementares', `"Remessa simbólica – venda à ordem. Mercadoria entregue a ${esc(C.n)}, ${e.doc ? 'CNPJ/CPF ' + cnpjTxt(e.doc) + ', ' : ''}${local(e.mun, e.uf)}, conforme NF-e de remessa nº [n], série [s], de [data]"`], ['Transporte', '<code>modFrete</code> = 9 (sem ocorrência de transporte)']],
+      kv: [['Natureza', '"Remessa Simbólica – Venda à Ordem" (art. 40, §3º, II, "b")'], ['CFOP', cfopPar(pre(b.uf), '118', '119')], ['ICMS', '<b>Com destaque</b> do ICMS próprio' + (st ? ' <b>e do ICMS-ST</b> (A como substituto)' : '')], ['NF referenciada', 'Chaves da NF-e de remessa A→C e da NF-e de venda B→C (grupo <code>&lt;refNFe&gt;</code>)'], ['Inf. complementares', `"Remessa simbólica – venda à ordem. Mercadoria entregue a ${esc(C.n)}, ${e.doc ? 'CNPJ/CPF ' + cnpjTxt(e.doc) + ', ' : ''}${local(e.mun, e.uf)}, conforme NF-e de remessa nº [n], série [s], de [data]"`], ['Transporte', '<code>modFrete</code> = 9 (sem ocorrência de transporte)']],
       icms: icmsVendaDireta(b.uf, true, false, st),
       campos: camposNFe(b.uf, true, false)
     });
