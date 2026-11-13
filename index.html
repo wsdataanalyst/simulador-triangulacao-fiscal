@@ -63,6 +63,7 @@ header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-c
 @media (max-width:720px){.col-6,.col-4,.col-8{grid-column:span 12}}
 label.lbl{display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:5px}
 label.lbl .req{color:var(--err)}
+label.lbl .sub{font-weight:500;color:var(--text-3)}
 .input,select.input{width:100%;font:inherit;font-size:14.5px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);outline:none;transition:.15s}
 .input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
 .input[readonly]{background:var(--surface-2);color:var(--text-2)}
@@ -87,6 +88,9 @@ label.lbl .req{color:var(--err)}
 .check input{width:18px;height:18px;accent-color:var(--brand);margin:0}
 .collapse{display:none;margin-top:14px}
 .collapse.open{display:block}
+.previa{margin-top:14px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);border-left:4px solid var(--text-3);background:var(--surface);font-size:13.5px}
+.previa.ok{border-left-color:var(--ok)}.previa.warn{border-left-color:var(--warn)}.previa.info{border-left-color:var(--info)}.previa.err{border-left-color:var(--err)}
+.previa .cf{font-family:var(--mono);font-size:12.5px;color:var(--text-2);margin-top:4px}
 .summary{margin:16px 0 14px;padding:12px 14px;border-radius:10px;background:var(--brand-soft);color:var(--brand-text);font-size:13.5px;font-weight:500;display:flex;gap:10px;align-items:flex-start}
 .summary svg{flex-shrink:0;margin-top:2px}
 #resultado{display:none}
@@ -211,7 +215,7 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
         </div>
         <div class="field-note warn" id="e-local-note"></div>
         <div class="collapse" id="e-box">
-          <p class="hint">Informe o CNPJ do recebedor (se Pessoa Jurídica) ou selecione Pessoa Física / Obra sem CNPJ.</p>
+          <p class="hint">Basta a UF do recebedor para ver o enquadramento. O CNPJ é opcional: se informado, consulta a IE e identifica filial do comprador.</p>
           <div class="grid">
             <div class="col-12">
               <label class="lbl">Tipo de Destinatário</label>
@@ -221,7 +225,7 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
               </div>
             </div>
             <div class="col-4">
-              <label class="lbl" for="e-doc" id="e-doc-lbl">CNPJ de Entrega <span class="req">*</span></label>
+              <label class="lbl" for="e-doc" id="e-doc-lbl">CNPJ de Entrega <span class="sub">(opcional — consulta IE e detecta filial)</span></label>
               <input class="input mono" id="e-doc" inputmode="numeric" placeholder="00.000.000/0000-00" maxlength="18">
               <div class="field-note" id="e-note"></div>
             </div>
@@ -246,6 +250,7 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
             </div>
           </div>
         </div>
+        <div class="previa" id="e-previa"></div>
       </div>
 
       <label class="check"><input type="checkbox" id="st"> O produto vendido está sujeito à Substituição Tributária (ICMS-ST)</label>
@@ -428,7 +433,7 @@ $('#e-doc').addEventListener('input', e => {
 });
 document.querySelectorAll('input[name="e-tipo"]').forEach(r => r.addEventListener('change', () => {
   const pf = radio('e-tipo') === 'pf';
-  $('#e-doc-lbl').innerHTML = pf ? 'CPF do Recebedor (opcional)' : 'CNPJ de Entrega <span class="req">*</span>';
+  $('#e-doc-lbl').innerHTML = pf ? 'CPF do Recebedor (opcional)' : 'CNPJ de Entrega <span class="sub">(opcional — consulta IE e detecta filial)</span>';
   $('#e-doc').placeholder = pf ? '000.000.000-00' : '00.000.000/0000-00'; $('#e-doc').maxLength = pf ? 14 : 18; $('#e-doc').value = '';
   $('#e-nome').placeholder = pf ? 'Nome do recebedor / identificação da obra' : 'Preenchido pela consulta (editável)';
   $('#e-note').textContent = ''; $('#e-ie-note').textContent = ''; dados.e = null;
@@ -451,19 +456,29 @@ function atualizaResumo() {
   if (!entregaOutro()) parts.push('A mercadoria será entregue diretamente no endereço cadastral do CNPJ comprador.');
   else {
     const pf = radio('e-tipo') === 'pf'; const uf = $('#e-uf').value; const mun = $('#e-mun').value.trim();
-    const raiz = !pf && digits($('#e-doc').value).length === 14 && digits($('#e-doc').value).slice(0, 8) === digits($('#b-cnpj').value).slice(0, 8);
+    const raiz = !pf && digits($('#e-doc').value).length === 14 && digits($('#b-cnpj').value).length === 14 && digits($('#e-doc').value).slice(0, 8) === digits($('#b-cnpj').value).slice(0, 8);
     parts.push(`Entrega física em ${pf ? 'pessoa física / obra' : (raiz ? 'filial do comprador' : 'terceiro (PJ)')}${mun || uf ? ' em ' + [mun, uf].filter(Boolean).join('/') : ''}.`);
   }
   parts.push(radio('b-destino') === 'consumo' ? 'Destino: uso/consumo.' : 'Destino: revenda.');
   if ($('#st').checked) parts.push('Produto com ICMS-ST.');
   $('#resumo-txt').textContent = parts.join(' ');
+  previa();
+}
+function previa() {
+  const box = $('#e-previa');
+  const bUf = $('#b-uf').value, eUf = $('#e-uf').value;
+  if (!bUf || !eUf) { box.className = 'previa'; box.innerHTML = `<b>Prévia do enquadramento:</b> selecione a UF ${!bUf ? 'do comprador' : 'de entrega'} para ver se há triangulação.`; return; }
+  const R = avaliar(coletar());
+  const cfops = R.steps.filter(s => !s.alt).map((s, i) => { const v = String((s.kv.find(k => k[0] === 'CFOP') || [])[1] || ''); const m = v.match(/\d\.\d{3}(?:\s*\/\s*\d\.\d{3})?/); return `NF ${i + 1}: ${m ? m[0] : v.slice(0, 30)}`; });
+  box.className = 'previa ' + R.badge.cls;
+  box.innerHTML = `<span class="badge ${R.badge.cls}">${esc(R.badge.txt)}</span> <b>${esc(R.titulo)}</b><div class="cf">${cfops.join(' • ')}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px">Prévia automática. Clique em "Consultar" para o procedimento completo e os alertas.</div>`;
 }
 atualizaResumo();
 
 $('#btn-limpar').addEventListener('click', () => {
   $('#form').reset(); $('#e-box').classList.remove('open'); $('#resultado').classList.remove('show');
   document.querySelectorAll('.field-note').forEach(n => { n.textContent = ''; n.className = 'field-note'; });
-  $('#e-doc-lbl').innerHTML = 'CNPJ de Entrega <span class="req">*</span>'; $('#e-doc').placeholder = '00.000.000/0000-00'; $('#e-doc').maxLength = 18;
+  $('#e-doc-lbl').innerHTML = 'CNPJ de Entrega <span class="sub">(opcional — consulta IE e detecta filial)</span>'; $('#e-doc').placeholder = '00.000.000/0000-00'; $('#e-doc').maxLength = 18;
   dados.b = dados.e = null; atualizaResumo(); $('#b-cnpj').focus();
 });
 
@@ -488,7 +503,7 @@ function validar({ b, e }) {
   if (b.cnpj.length !== 14 || !validaCNPJ(b.cnpj)) errs.push('Informe um CNPJ válido para o cliente comprador.');
   if (!b.uf) errs.push('Informe a UF do cliente comprador.');
   if (e) {
-    if (e.tipo === 'pj' && (e.doc.length !== 14 || !validaCNPJ(e.doc))) errs.push('Informe um CNPJ válido para o local de entrega.');
+    if (e.tipo === 'pj' && e.doc && (e.doc.length !== 14 || !validaCNPJ(e.doc))) errs.push('O CNPJ do local de entrega é inválido (ou deixe em branco).');
     if (e.tipo === 'pf' && e.doc && !validaCPF(e.doc)) errs.push('O CPF do recebedor é inválido.');
     if (!e.uf) errs.push('Informe a UF do local de entrega.');
   }
@@ -556,7 +571,7 @@ function avaliar(inp) {
   if (st && b.uf !== EMITENTE.uf && b.contrib) al('warn', `Produto com ICMS-ST em operação interestadual ${EMITENTE.uf}→${esc(b.uf)}: verifique se há <b>Convênio/Protocolo</b> para o NCM. Sem acordo, não destaque ST — o destinatário recolhe antecipação na entrada.`);
 
   /* ======== CENÁRIO 1: entrega no endereço do comprador ======== */
-  if (!e || (e.tipo === 'pj' && e.doc === b.cnpj)) {
+  if (!e || (e.tipo === 'pj' && e.doc.length === 14 && e.doc === b.cnpj)) {
     if (e) al('warn', 'O CNPJ de entrega informado é o <b>próprio comprador</b>, portanto não há terceiro envolvido e não há triangulação. Se a mercadoria vai para o cliente do seu cliente, informe o CNPJ/CPF desse recebedor.');
     else al('warn', 'Resultado baseado na resposta <b>"entrega no endereço do próprio comprador"</b>. Se a mercadoria for entregue a um terceiro (cliente do seu cliente), filial ou obra, selecione <b>"Em outro endereço / CNPJ"</b> na seção 2 — o enquadramento muda para venda à ordem ou entrega em local diverso.');
     if (b.uf !== EMITENTE.uf) al('warn', `Este resultado pressupõe que a mercadoria será <b>transportada do ${EMITENTE.uf} até ${esc([b.mun, b.uf].filter(Boolean).join('/'))}</b> (CFOP 6.xxx). Se ela ficar no ${EMITENTE.uf} e for entregue a outra pessoa, a operação é <b>triangulação</b> e deve ser refeita marcando "Em outro endereço / CNPJ".`);
@@ -577,7 +592,7 @@ function avaliar(inp) {
 
   /* --- dados do recebedor (C) --- */
   const pf = e.tipo === 'pf';
-  const raizIgual = !pf && e.doc.slice(0, 8) === b.cnpj.slice(0, 8);
+  const raizIgual = !pf && e.doc.length === 14 && b.cnpj.length === 14 && e.doc.slice(0, 8) === b.cnpj.slice(0, 8);
   const C = { k: pf ? 'C • RECEBEDOR (PF/OBRA)' : (raizIgual ? 'C • FILIAL DO COMPRADOR' : 'C • RECEBEDOR (TERCEIRO)'), n: nomeOu(e.nome, pf ? 'Pessoa física / obra' : 'Recebedor'), d: `${e.doc ? cnpjTxt(e.doc) + ' • ' : ''}${[e.mun, e.uf].filter(Boolean).join('/')}` };
 
   /* ======== CENÁRIO 2: filial do comprador ======== */
