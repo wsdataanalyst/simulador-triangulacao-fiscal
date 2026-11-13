@@ -23,7 +23,7 @@ Ambas são públicas e gratuitas; o CNPJ.ws limita a 3 consultas por minuto no p
 
 ## Configuração
 
-Os dados do remetente ficam no início do bloco `<script>` de `index.html`, na constante `EMITENTE`. As alíquotas internas de referência por UF estão em `ALIQ_INTERNA` e devem ser revisadas periodicamente.
+O remetente configurado é a **Carmehil Comercial Elétrica Ltda** (CNPJ 02.403.486/0001-34, Fortaleza/CE). Os dados ficam no início do bloco `<script>` de `index.html`, na constante `EMITENTE`. As alíquotas internas de referência por UF estão em `ALIQ_INTERNA` e devem ser revisadas periodicamente.
 
 ## Execução
 
