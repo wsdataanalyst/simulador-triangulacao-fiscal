@@ -82,6 +82,7 @@ label.lbl .req{color:var(--err)}
 .switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .switch input:checked{background:var(--brand)}
 .switch input:checked::after{left:21px}
+.seg-big label{padding:12px 14px;font-size:14px}
 .check{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
 .check input{width:18px;height:18px;accent-color:var(--brand);margin:0}
 .collapse{display:none;margin-top:14px}
@@ -203,7 +204,11 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
 
       <div class="section">
         <h3 class="section-title"><span class="num">2</span> Local de Entrega Física da Mercadoria</h3>
-        <label class="switch"><input type="checkbox" id="e-on"> Entregar em outro endereço / CNPJ (Terceiro ou Filial)</label>
+        <p class="hint">Onde a mercadoria será entregue fisicamente? <span class="req">*</span> Esta resposta define se há ou não triangulação.</p>
+        <div class="seg seg-big">
+          <label><input type="radio" name="e-local" value="comprador" checked><span>No endereço do próprio comprador (CNPJ faturado)</span></label>
+          <label><input type="radio" name="e-local" value="outro"><span>Em outro endereço / CNPJ — terceiro, cliente do meu cliente, filial ou obra</span></label>
+        </div>
         <div class="collapse" id="e-box">
           <p class="hint">Informe o CNPJ do recebedor (se Pessoa Jurídica) ou selecione Pessoa Física / Obra sem CNPJ.</p>
           <div class="grid">
@@ -428,13 +433,14 @@ document.querySelectorAll('input[name="e-tipo"]').forEach(r => r.addEventListene
   if (pf) setRadio('e-contrib', '0');
   atualizaResumo();
 }));
-$('#e-on').addEventListener('change', e => { $('#e-box').classList.toggle('open', e.target.checked); atualizaResumo(); });
+const entregaOutro = () => radio('e-local') === 'outro';
+document.querySelectorAll('input[name="e-local"]').forEach(r => r.addEventListener('change', () => { $('#e-box').classList.toggle('open', entregaOutro()); atualizaResumo(); }));
 $('#form').addEventListener('change', atualizaResumo);
 $('#form').addEventListener('input', atualizaResumo);
 
 function atualizaResumo() {
   const parts = [];
-  if (!$('#e-on').checked) parts.push('A mercadoria será entregue diretamente no endereço cadastral do CNPJ comprador.');
+  if (!entregaOutro()) parts.push('A mercadoria será entregue diretamente no endereço cadastral do CNPJ comprador.');
   else {
     const pf = radio('e-tipo') === 'pf'; const uf = $('#e-uf').value; const mun = $('#e-mun').value.trim();
     const raiz = !pf && digits($('#e-doc').value).length === 14 && digits($('#e-doc').value).slice(0, 8) === digits($('#b-cnpj').value).slice(0, 8);
@@ -462,7 +468,7 @@ function coletar() {
     cnae: dados.b ? dados.b.cnae : '', cnaeDesc: dados.b ? dados.b.cnaeDesc : '', situacao: dados.b ? (dados.b.situacao || '').toUpperCase() : '',
     simples: dados.b ? dados.b.simples : null, contrib: radio('b-contrib') === '1', destino: radio('b-destino')
   };
-  const on = $('#e-on').checked;
+  const on = entregaOutro();
   const e = on ? {
     tipo: radio('e-tipo'), doc: digits($('#e-doc').value), nome: $('#e-nome').value.trim(), uf: $('#e-uf').value, mun: $('#e-mun').value.trim(),
     contrib: radio('e-tipo') === 'pj' && radio('e-contrib') === '1', situacao: dados.e ? (dados.e.situacao || '').toUpperCase() : '', cnaeDesc: dados.e ? dados.e.cnaeDesc : ''
@@ -542,10 +548,12 @@ function avaliar(inp) {
 
   /* ======== CENÁRIO 1: entrega no endereço do comprador ======== */
   if (!e || (e.tipo === 'pj' && e.doc === b.cnpj)) {
-    if (e) al('info', 'O CNPJ de entrega é o próprio comprador — não há triangulação. Tratado como venda direta.');
+    if (e) al('warn', 'O CNPJ de entrega informado é o <b>próprio comprador</b>, portanto não há terceiro envolvido e não há triangulação. Se a mercadoria vai para o cliente do seu cliente, informe o CNPJ/CPF desse recebedor.');
+    else al('warn', 'Resultado baseado na resposta <b>"entrega no endereço do próprio comprador"</b>. Se a mercadoria for entregue a um terceiro (cliente do seu cliente), filial ou obra, selecione <b>"Em outro endereço / CNPJ"</b> na seção 2 — o enquadramento muda para venda à ordem ou entrega em local diverso.');
+    if (b.contrib && b.destino === 'revenda' && b.uf !== EMITENTE.uf) al('info', `Comprador contribuinte em ${esc(b.uf)} que revende: se ele pedir entrega direta ao cliente dele, a operação é <b>venda à ordem</b> (art. 40) — três notas: venda B→C, remessa A→C (x.923, sem ICMS) e remessa simbólica A→B (6.118/6.119, com ICMS).`);
     R.badge = { cls: 'ok', txt: 'SEM TRIANGULAÇÃO' };
     R.titulo = 'Venda direta — entrega no estabelecimento do comprador';
-    R.desc = 'Operação bilateral comum: uma única NF-e de venda. Não se aplica o art. 40 do Convênio SINIEF s/nº.';
+    R.desc = 'Operação bilateral comum: uma única NF-e de venda. O art. 40 do Convênio SINIEF s/nº (venda à ordem) só se aplica quando a mercadoria é entregue a um terceiro por conta e ordem do comprador.';
     R.base = `Base Legal: <b>RICMS/CE</b> (operação ${b.uf === EMITENTE.uf ? 'interna' : 'interestadual'})${b.uf !== EMITENTE.uf && consumoB ? ' • <b>EC 87/2015 • LC 190/2022 • Conv. ICMS 236/2021</b> (DIFAL)' : ''}${st ? ' • <b>Conv. ICMS 142/2018</b> (ICMS-ST)' : ''}`;
     R.fluxo = [A, { arrow: 'Venda + entrega', sub: 'NF-e única' }, B];
     R.steps.push({
