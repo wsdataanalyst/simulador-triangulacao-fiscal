@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Triangulação</title>
+<meta name="description" content="Validador de Venda à Ordem (Convênio SINIEF s/nº, art. 40) e entrega em local diverso, com consulta cadastral de CNPJ.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#f8fafc; --border:#dde3ec; --border-strong:#c7d0dd;
+  --text:#0f172a; --text-2:#475569; --text-3:#64748b;
+  --brand:#1d4ed8; --brand-2:#1e40af; --brand-soft:#e8efff; --brand-text:#1e3a8a;
+  --ok:#15803d; --ok-soft:#dcfce7; --warn:#b45309; --warn-soft:#fef3c7; --err:#b91c1c; --err-soft:#fee2e2; --info:#0369a1; --info-soft:#e0f2fe;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 16px rgba(15,23,42,.06);
+  --radius:14px; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1220; --surface:#121a2b; --surface-2:#0f172a; --border:#1f2a3f; --border-strong:#2c3a55;
+    --text:#e5e9f2; --text-2:#aab4c6; --text-3:#8391a8;
+    --brand:#4f7cff; --brand-2:#3b65e6; --brand-soft:#17233f; --brand-text:#c3d2ff;
+    --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbbf24; --warn-soft:#2f2308; --err:#f87171; --err-soft:#331313; --info:#38bdf8; --info-soft:#0c2231;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --surface:#121a2b; --surface-2:#0f172a; --border:#1f2a3f; --border-strong:#2c3a55;
+  --text:#e5e9f2; --text-2:#aab4c6; --text-3:#8391a8;
+  --brand:#4f7cff; --brand-2:#3b65e6; --brand-soft:#17233f; --brand-text:#c3d2ff;
+  --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbbf24; --warn-soft:#2f2308; --err:#f87171; --err-soft:#331313; --info:#38bdf8; --info-soft:#0c2231;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 56px}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.title h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.title p{margin:4px 0 0;color:var(--text-2);font-size:14px}
+.emitente{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow);min-width:260px}
+.emitente .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--brand-text);background:var(--brand-soft);padding:3px 8px;border-radius:999px;margin-bottom:6px}
+.emitente .nome{font-weight:700;font-size:13px}
+.emitente .cnpj{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+.card-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-head h2{margin:0;font-size:18px;font-weight:700}
+.card-head p{margin:4px 0 0;color:var(--text-2);font-size:14px}
+.btn{appearance:none;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:9px 14px;border-radius:10px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff;padding:14px 22px;font-size:16px;width:100%;border-radius:12px}
+.btn-primary:hover{background:var(--brand-2);color:#fff}
+.section{border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:14px;background:var(--surface-2)}
+.section-title{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:15px;font-weight:700}
+.section-title .num{width:26px;height:26px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.section-title .sub{font-weight:500;color:var(--text-3);font-size:13px}
+.hint{color:var(--text-3);font-size:13px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-8{grid-column:span 8}
+@media (max-width:720px){.col-6,.col-4,.col-8{grid-column:span 12}}
+label.lbl{display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+label.lbl .req{color:var(--err)}
+.input,select.input{width:100%;font:inherit;font-size:14.5px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);outline:none;transition:.15s}
+.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.input[readonly]{background:var(--surface-2);color:var(--text-2)}
+.input.mono{font-family:var(--mono);letter-spacing:.02em}
+.row{display:flex;gap:8px}
+.row .uf{width:92px;flex-shrink:0}
+.field-note{font-size:12px;margin-top:5px;color:var(--text-3);min-height:16px}
+.field-note.ok{color:var(--ok)}.field-note.err{color:var(--err)}.field-note.warn{color:var(--warn)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{flex:1;min-width:140px;border:1px solid var(--border-strong);border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:500;cursor:pointer;background:var(--surface);display:flex;align-items:center;gap:8px;transition:.15s;color:var(--text-2)}
+.seg label:hover{border-color:var(--brand)}
+.seg input{accent-color:var(--brand);margin:0}
+.seg input:checked + span{color:var(--text);font-weight:600}
+.seg label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--text)}
+.switch{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;margin-top:2px}
+.switch input{appearance:none;width:42px;height:24px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;flex-shrink:0;transition:.2s;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch input:checked{background:var(--brand)}
+.switch input:checked::after{left:21px}
+.check{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
+.check input{width:18px;height:18px;accent-color:var(--brand);margin:0}
+.collapse{display:none;margin-top:14px}
+.collapse.open{display:block}
+.summary{margin:16px 0 14px;padding:12px 14px;border-radius:10px;background:var(--brand-soft);color:var(--brand-text);font-size:13.5px;font-weight:500;display:flex;gap:10px;align-items:flex-start}
+.summary svg{flex-shrink:0;margin-top:2px}
+#resultado{display:none}
+#resultado.show{display:block}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.warn{background:var(--warn-soft);color:var(--warn)}.badge.err{background:var(--err-soft);color:var(--err)}.badge.info{background:var(--info-soft);color:var(--info)}
+.base-legal{font-size:13px;color:var(--text-2)}
+.base-legal b{color:var(--text)}
+.fluxo{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;margin:18px 0 6px}
+.fluxo.two{grid-template-columns:1fr auto 1fr}
+.node{border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--surface-2);min-width:0}
+.node .k{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text-3)}
+.node .n{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .d{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arrow{color:var(--text-3);font-size:12px;text-align:center;line-height:1.2;max-width:130px}
+.arrow b{display:block;color:var(--brand);font-size:18px;line-height:1}
+@media (max-width:720px){.fluxo,.fluxo.two{grid-template-columns:1fr}.arrow{max-width:none}.arrow b{transform:rotate(90deg);display:inline-block}}
+.steps{display:grid;gap:12px;margin-top:14px}
+.step{border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;background:var(--surface)}
+.step.alt{border-left-color:var(--text-3)}
+.step-h{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:8px}
+.step-h .num{min-width:28px;height:28px;padding:0 8px;border-radius:14px;background:var(--brand);color:#fff;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.step.alt .step-h .num{background:var(--text-3)}
+.step-h h3{margin:0;font-size:15px;font-weight:700}
+.step-h .who{font-size:12.5px;color:var(--text-2);width:100%;margin-left:40px}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13.5px;margin:6px 0 0}
+.kv dt{color:var(--text-3);font-weight:600}
+.kv dd{margin:0}
+.kv code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--border);padding:1px 6px;border-radius:6px}
+@media (max-width:560px){.kv{grid-template-columns:1fr}.kv dt{margin-top:4px}}
+.alertas{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.alerta{display:flex;gap:10px;padding:11px 13px;border-radius:10px;font-size:13.5px;border:1px solid transparent}
+.alerta svg{flex-shrink:0;margin-top:2px}
+.alerta.err{background:var(--err-soft);color:var(--err);border-color:color-mix(in srgb,var(--err) 25%,transparent)}
+.alerta.warn{background:var(--warn-soft);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 25%,transparent)}
+.alerta.info{background:var(--info-soft);color:var(--info);border-color:color-mix(in srgb,var(--info) 25%,transparent)}
+.alerta.ok{background:var(--ok-soft);color:var(--ok);border-color:color-mix(in srgb,var(--ok) 25%,transparent)}
+.alerta .t{color:var(--text)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;line-height:1.6}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border-strong);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media print{
+  body{background:#fff}.wrap{padding:0}.card{box-shadow:none;break-inside:avoid}
+  #form-card,.tools{display:none}
+  #resultado{display:block!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <h1><span aria-hidden="true">🔺</span> Simulador Fiscal de Triangulação</h1>
+      <p>Validador de Venda à Ordem • Convênio SINIEF s/nº Art. 40 &amp; RICMS/CE</p>
+    </div>
+    <div class="emitente" id="emitente-box">
+      <span class="tag" id="emit-tag"></span>
+      <div class="nome" id="emit-nome"></div>
+      <div class="cnpj" id="emit-cnpj"></div>
+    </div>
+  </header>
+
+  <section class="card" id="form-card">
+    <div class="card-head">
+      <div>
+        <h2>Dados da Operação Comercial</h2>
+        <p>Preencha o CNPJ do cliente comprador e informe se a entrega física será em outro local.</p>
+      </div>
+      <button class="btn" type="button" id="btn-limpar">Limpar Campos</button>
+    </div>
+
+    <form id="form" autocomplete="off" novalidate>
+      <div class="section">
+        <h3 class="section-title"><span class="num">1</span> Cliente Comprador <span class="sub">(Quem Fatura e Paga)</span></h3>
+        <p class="hint">A consulta cadastral é automática ao digitar os 14 dígitos do CNPJ.</p>
+        <div class="grid">
+          <div class="col-4">
+            <label class="lbl" for="b-cnpj">CNPJ do Cliente <span class="req">*</span></label>
+            <input class="input mono" id="b-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" maxlength="18">
+            <div class="field-note" id="b-note"></div>
+          </div>
+          <div class="col-8">
+            <label class="lbl" for="b-razao">Razão Social</label>
+            <input class="input" id="b-razao" placeholder="Preenchido pela consulta (editável)">
+          </div>
+          <div class="col-6">
+            <label class="lbl" for="b-uf">UF / Município <span class="req">*</span></label>
+            <div class="row">
+              <select class="input uf" id="b-uf"></select>
+              <input class="input" id="b-mun" placeholder="Município">
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="lbl" for="b-cnae">CNAE Principal (Identificado)</label>
+            <input class="input" id="b-cnae" readonly placeholder="—">
+          </div>
+          <div class="col-6">
+            <label class="lbl">Condição Fiscal do Cliente (ICMS) <span class="req">*</span></label>
+            <div class="seg">
+              <label><input type="radio" name="b-contrib" value="1" checked><span>Contribuinte ICMS (Possui IE Ativa)</span></label>
+              <label><input type="radio" name="b-contrib" value="0"><span>Não Contribuinte (Serviço / Isento IE)</span></label>
+            </div>
+            <div class="field-note" id="b-ie-note"></div>
+          </div>
+          <div class="col-6">
+            <label class="lbl">Destino da Mercadoria <span class="req">*</span></label>
+            <div class="seg">
+              <label><input type="radio" name="b-destino" value="revenda" checked><span>Revenda Comercial</span></label>
+              <label><input type="radio" name="b-destino" value="consumo"><span>Uso / Consumo / Obra</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title"><span class="num">2</span> Local de Entrega Física da Mercadoria</h3>
+        <label class="switch"><input type="checkbox" id="e-on"> Entregar em outro endereço / CNPJ (Terceiro ou Filial)</label>
+        <div class="collapse" id="e-box">
+          <p class="hint">Informe o CNPJ do recebedor (se Pessoa Jurídica) ou selecione Pessoa Física / Obra sem CNPJ.</p>
+          <div class="grid">
+            <div class="col-12">
+              <label class="lbl">Tipo de Destinatário</label>
+              <div class="seg">
+                <label><input type="radio" name="e-tipo" value="pj" checked><span>Pessoa Jurídica (CNPJ)</span></label>
+                <label><input type="radio" name="e-tipo" value="pf"><span>Pessoa Física / Obra (CPF)</span></label>
+              </div>
+            </div>
+            <div class="col-4">
+              <label class="lbl" for="e-doc" id="e-doc-lbl">CNPJ de Entrega <span class="req">*</span></label>
+              <input class="input mono" id="e-doc" inputmode="numeric" placeholder="00.000.000/0000-00" maxlength="18">
+              <div class="field-note" id="e-note"></div>
+            </div>
+            <div class="col-8">
+              <label class="lbl" for="e-nome">Nome / Razão Social Recebedor</label>
+              <input class="input" id="e-nome" placeholder="Preenchido pela consulta (editável)">
+            </div>
+            <div class="col-6">
+              <label class="lbl" for="e-uf">UF / Cidade Entrega <span class="req">*</span></label>
+              <div class="row">
+                <select class="input uf" id="e-uf"></select>
+                <input class="input" id="e-mun" placeholder="Cidade">
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="lbl">Condição Fiscal Recebedor (C)</label>
+              <div class="seg">
+                <label><input type="radio" name="e-contrib" value="1" checked><span>Contribuinte ICMS (Com IE)</span></label>
+                <label><input type="radio" name="e-contrib" value="0"><span>Não Contribuinte / Consumidor Final</span></label>
+              </div>
+              <div class="field-note" id="e-ie-note"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <label class="check"><input type="checkbox" id="st"> O produto vendido está sujeito à Substituição Tributária (ICMS-ST)</label>
+
+      <div class="summary" id="resumo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span id="resumo-txt"></span>
+      </div>
+
+      <button class="btn btn-primary" type="submit" id="btn-consultar">Consultar Regra de Triangulação</button>
+    </form>
+  </section>
+
+  <section class="card" id="resultado" aria-live="polite">
+    <div>
+      <span class="badge" id="r-badge"></span>
+      <h2 style="margin:8px 0 2px;font-size:20px" id="r-titulo"></h2>
+      <p style="margin:0;color:var(--text-2);font-size:14px" id="r-desc"></p>
+    </div>
+    <div id="r-fluxo"></div>
+
+    <h2 style="font-size:17px;margin:22px 0 2px">Procedimento de Emissão Fiscal (Passo a Passo)</h2>
+    <div class="base-legal" id="r-base"></div>
+    <div class="steps" id="r-steps"></div>
+
+    <h2 style="font-size:17px;margin:24px 0 10px">Alertas de Conformidade Tributária</h2>
+    <ul class="alertas" id="r-alertas"></ul>
+
+    <div class="tools">
+      <button class="btn" type="button" id="btn-copiar">Copiar procedimento</button>
+      <button class="btn" type="button" id="btn-print">Imprimir / PDF</button>
+    </div>
+  </section>
+
+  <footer>
+    Ferramenta de apoio operacional • Consulte sempre o setor fiscal/contábil para regimes especiais. Consulta cadastral via BrasilAPI / CNPJ.ws<br>
+    Alíquotas de referência podem sofrer alteração; confirme a vigência na legislação de cada UF.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DO REMETENTE (ajuste aqui se necessário)
+   ============================================================ */
+const EMITENTE = {
+  rotulo: 'EMPRESA REMETENTE (FORTALEZA/CE)',
+  tipo: 'INDÚSTRIA / COMÉRCIO • CE',
+  cnpj: '24.369.407/0001-59',
+  uf: 'CE',
+  municipio: 'Fortaleza'
+};
+
+const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+/* Alíquotas internas modais de referência — confirmar vigência */
+const ALIQ_INTERNA = {AC:19,AL:19,AM:20,AP:18,BA:20.5,CE:20,DF:20,ES:17,GO:19,MA:23,MG:18,MS:17,MT:17,PA:19,PB:20,PE:20.5,PI:22.5,PR:19.5,RJ:22,RN:20,RS:17,SC:17,SE:19,SP:18,TO:20,RO:19.5,RR:20};
+const ALIQ_INTER = 12; /* Origem CE (Nordeste) -> qualquer UF: 12% (4% se importada, Res. SF 13/2012) */
+
+/* ============================================================
+   Utilidades
+   ============================================================ */
+const $ = (s) => document.querySelector(s);
+const digits = (v) => (v || '').replace(/\D/g, '');
+const fmtCNPJ = (d) => d.replace(/^(\d{2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/, (m,a,b,c,e,f) => a + (b?'.'+b:'') + (c?'.'+c:'') + (e?'/'+e:'') + (f?'-'+f:''));
+const fmtCPF  = (d) => d.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2}).*/, (m,a,b,c,e) => a + (b?'.'+b:'') + (c?'.'+c:'') + (e?'-'+e:''));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const radio = (name) => (document.querySelector(`input[name="${name}"]:checked`) || {}).value;
+const setRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
+const pct = (n) => (Math.round(n * 100) / 100).toString().replace('.', ',') + '%';
+const titleCase = (s) => (s || '').toLowerCase().replace(/(^|\s)\S/g, t => t.toUpperCase());
+
+function validaCNPJ(c) {
+  if (!/^\d{14}$/.test(c) || /^(\d)\1+$/.test(c)) return false;
+  const calc = (len) => { let s = 0, p = len - 7; for (let i = len; i >= 1; i--) { s += c[len - i] * p--; if (p < 2) p = 9; } const r = s % 11; return r < 2 ? 0 : 11 - r; };
+  return calc(12) === +c[12] && calc(13) === +c[13];
+}
+function validaCPF(c) {
+  if (!/^\d{11}$/.test(c) || /^(\d)\1+$/.test(c)) return false;
+  const calc = (n) => { let s = 0; for (let i = 0; i < n; i++) s += c[i] * (n + 1 - i); const r = (s * 10) % 11; return r === 10 ? 0 : r; };
+  return calc(9) === +c[9] && calc(10) === +c[10];
+}
+
+/* ============================================================
+   Consulta cadastral: BrasilAPI (dados) + CNPJ.ws (IE)
+   ============================================================ */
+const cache = {};
+async function consultaCNPJ(cnpj) {
+  if (cache[cnpj]) return cache[cnpj];
+  const out = { ok: false, razao: '', uf: '', municipio: '', cnae: '', cnaeDesc: '', situacao: '', simples: null, ies: [], ieConsultada: false, matrizFilial: '', fonte: [] };
+  const p1 = fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const p2 = fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const [a, b] = await Promise.all([p1, p2]);
+  if (a) {
+    out.ok = true; out.fonte.push('BrasilAPI');
+    out.razao = a.razao_social || ''; out.uf = a.uf || ''; out.municipio = a.municipio || '';
+    out.cnae = String(a.cnae_fiscal || ''); out.cnaeDesc = a.cnae_fiscal_descricao || '';
+    out.situacao = a.descricao_situacao_cadastral || ''; out.simples = a.opcao_pelo_simples; out.matrizFilial = a.descricao_identificador_matriz_filial || '';
+  }
+  if (b && b.estabelecimento) {
+    const e = b.estabelecimento; out.ok = true; out.fonte.push('CNPJ.ws');
+    out.razao = out.razao || b.razao_social || '';
+    out.uf = out.uf || (e.estado && e.estado.sigla) || '';
+    out.municipio = out.municipio || (e.cidade && e.cidade.nome) || '';
+    if (e.atividade_principal) { out.cnae = out.cnae || String(e.atividade_principal.id || ''); out.cnaeDesc = out.cnaeDesc || e.atividade_principal.descricao || ''; }
+    out.situacao = out.situacao || e.situacao_cadastral || '';
+    if (out.simples === null && b.simples) out.simples = b.simples.simples === 'Sim';
+    out.ies = (e.inscricoes_estaduais || []).map(ie => ({ ie: ie.inscricao_estadual, ativo: !!ie.ativo, uf: ie.estado && ie.estado.sigla }));
+    out.ieConsultada = true;
+  }
+  if (out.ok) cache[cnpj] = out;
+  return out;
+}
+const fmtCNAE = (c, d) => c ? `${c.replace(/^(\d{4})(\d{1})(\d{2})$/, '$1-$2/$3')} • ${d}` : '';
+
+/* ============================================================
+   Formulário
+   ============================================================ */
+function fillUF(sel) { sel.innerHTML = '<option value="">UF</option>' + UFS.map(u => `<option>${u}</option>`).join(''); }
+fillUF($('#b-uf')); fillUF($('#e-uf'));
+$('#emit-tag').textContent = EMITENTE.tipo; $('#emit-nome').textContent = EMITENTE.rotulo; $('#emit-cnpj').textContent = `CNPJ: ${EMITENTE.cnpj} • ${EMITENTE.municipio}/${EMITENTE.uf}`;
+
+const dados = { b: null, e: null };
+let seqB = 0, seqE = 0;
+
+async function lookupB() {
+  const d = digits($('#b-cnpj').value); const note = $('#b-note'); const ieNote = $('#b-ie-note');
+  dados.b = null; ieNote.textContent = '';
+  if (d.length !== 14) { note.textContent = ''; note.className = 'field-note'; return; }
+  if (!validaCNPJ(d)) { note.textContent = 'CNPJ inválido (dígito verificador).'; note.className = 'field-note err'; return; }
+  const my = ++seqB;
+  note.innerHTML = '<span class="spinner"></span>Consultando cadastro...'; note.className = 'field-note';
+  const r = await consultaCNPJ(d);
+  if (my !== seqB) return;
+  if (!r.ok) { note.textContent = 'Cadastro não localizado. Preencha os dados manualmente.'; note.className = 'field-note warn'; return; }
+  dados.b = r;
+  $('#b-razao').value = r.razao; $('#b-uf').value = r.uf; $('#b-mun').value = titleCase(r.municipio); $('#b-cnae').value = fmtCNAE(r.cnae, r.cnaeDesc);
+  const sit = (r.situacao || '').toUpperCase();
+  note.textContent = `Situação cadastral: ${titleCase(r.situacao) || '—'}${r.matrizFilial ? ' • ' + titleCase(r.matrizFilial) : ''}${r.simples ? ' • Simples Nacional' : ''} (${r.fonte.join(' + ')})`;
+  note.className = 'field-note ' + (sit === 'ATIVA' ? 'ok' : 'err');
+  aplicaIE(r, 'b-contrib', ieNote);
+  atualizaResumo();
+}
+async function lookupE() {
+  if (radio('e-tipo') !== 'pj') return;
+  const d = digits($('#e-doc').value); const note = $('#e-note'); const ieNote = $('#e-ie-note');
+  dados.e = null; ieNote.textContent = '';
+  if (d.length !== 14) { note.textContent = ''; note.className = 'field-note'; return; }
+  if (!validaCNPJ(d)) { note.textContent = 'CNPJ inválido (dígito verificador).'; note.className = 'field-note err'; return; }
+  const my = ++seqE;
+  note.innerHTML = '<span class="spinner"></span>Consultando cadastro...'; note.className = 'field-note';
+  const r = await consultaCNPJ(d);
+  if (my !== seqE) return;
+  if (!r.ok) { note.textContent = 'Cadastro não localizado. Preencha os dados manualmente.'; note.className = 'field-note warn'; return; }
+  dados.e = r;
+  $('#e-nome').value = r.razao; $('#e-uf').value = r.uf; $('#e-mun').value = titleCase(r.municipio);
+  const sit = (r.situacao || '').toUpperCase();
+  const raizIgual = d.slice(0, 8) === digits($('#b-cnpj').value).slice(0, 8);
+  note.textContent = `Situação: ${titleCase(r.situacao) || '—'}${raizIgual ? ' • Mesma raiz do comprador (filial/matriz)' : ''}${r.cnaeDesc ? ' • ' + r.cnaeDesc : ''}`;
+  note.className = 'field-note ' + (sit === 'ATIVA' ? 'ok' : 'err');
+  aplicaIE(r, 'e-contrib', ieNote);
+  atualizaResumo();
+}
+function aplicaIE(r, radioName, noteEl) {
+  if (!r.ieConsultada) { noteEl.textContent = 'IE não verificada (serviço indisponível). Confirme a condição fiscal.'; noteEl.className = 'field-note warn'; return; }
+  const ativas = r.ies.filter(i => i.ativo);
+  if (ativas.length) { setRadio(radioName, '1'); noteEl.textContent = `IE ativa identificada: ${ativas.map(i => i.ie + '/' + i.uf).join(', ')}`; noteEl.className = 'field-note ok'; }
+  else { setRadio(radioName, '0'); noteEl.textContent = 'Nenhuma IE ativa localizada no cadastro — sugerido "Não Contribuinte". Confirme com o cliente.'; noteEl.className = 'field-note warn'; }
+}
+
+$('#b-cnpj').addEventListener('input', e => { e.target.value = fmtCNPJ(digits(e.target.value).slice(0, 14)); lookupB(); });
+$('#e-doc').addEventListener('input', e => {
+  const pf = radio('e-tipo') === 'pf'; const d = digits(e.target.value).slice(0, pf ? 11 : 14);
+  e.target.value = pf ? fmtCPF(d) : fmtCNPJ(d);
+  if (pf) {
+    const n = $('#e-note');
+    if (d.length === 11) { const ok = validaCPF(d); n.textContent = ok ? 'CPF válido.' : 'CPF inválido (dígito verificador).'; n.className = 'field-note ' + (ok ? 'ok' : 'err'); }
+    else { n.textContent = ''; n.className = 'field-note'; }
+    atualizaResumo();
+  } else lookupE();
+});
+document.querySelectorAll('input[name="e-tipo"]').forEach(r => r.addEventListener('change', () => {
+  const pf = radio('e-tipo') === 'pf';
+  $('#e-doc-lbl').innerHTML = pf ? 'CPF do Recebedor (opcional)' : 'CNPJ de Entrega <span class="req">*</span>';
+  $('#e-doc').placeholder = pf ? '000.000.000-00' : '00.000.000/0000-00'; $('#e-doc').maxLength = pf ? 14 : 18; $('#e-doc').value = '';
+  $('#e-nome').placeholder = pf ? 'Nome do recebedor / identificação da obra' : 'Preenchido pela consulta (editável)';
+  $('#e-note').textContent = ''; $('#e-ie-note').textContent = ''; dados.e = null;
+  if (pf) setRadio('e-contrib', '0');
+  atualizaResumo();
+}));
+$('#e-on').addEventListener('change', e => { $('#e-box').classList.toggle('open', e.target.checked); atualizaResumo(); });
+$('#form').addEventListener('change', atualizaResumo);
+$('#form').addEventListener('input', atualizaResumo);
+
+function atualizaResumo() {
+  const parts = [];
+  if (!$('#e-on').checked) parts.push('A mercadoria será entregue diretamente no endereço cadastral do CNPJ comprador.');
+  else {
+    const pf = radio('e-tipo') === 'pf'; const uf = $('#e-uf').value; const mun = $('#e-mun').value.trim();
+    const raiz = !pf && digits($('#e-doc').value).length === 14 && digits($('#e-doc').value).slice(0, 8) === digits($('#b-cnpj').value).slice(0, 8);
+    parts.push(`Entrega física em ${pf ? 'pessoa física / obra' : (raiz ? 'filial do comprador' : 'terceiro (PJ)')}${mun || uf ? ' em ' + [mun, uf].filter(Boolean).join('/') : ''}.`);
+  }
+  parts.push(radio('b-destino') === 'consumo' ? 'Destino: uso/consumo.' : 'Destino: revenda.');
+  if ($('#st').checked) parts.push('Produto com ICMS-ST.');
+  $('#resumo-txt').textContent = parts.join(' ');
+}
+atualizaResumo();
+
+$('#btn-limpar').addEventListener('click', () => {
+  $('#form').reset(); $('#e-box').classList.remove('open'); $('#resultado').classList.remove('show');
+  document.querySelectorAll('.field-note').forEach(n => { n.textContent = ''; n.className = 'field-note'; });
+  $('#e-doc-lbl').innerHTML = 'CNPJ de Entrega <span class="req">*</span>'; $('#e-doc').placeholder = '00.000.000/0000-00'; $('#e-doc').maxLength = 18;
+  dados.b = dados.e = null; atualizaResumo(); $('#b-cnpj').focus();
+});
+
+/* ============================================================
+   Motor de regras
+   ============================================================ */
+function coletar() {
+  const b = {
+    cnpj: digits($('#b-cnpj').value), razao: $('#b-razao').value.trim(), uf: $('#b-uf').value, mun: $('#b-mun').value.trim(),
+    cnae: dados.b ? dados.b.cnae : '', cnaeDesc: dados.b ? dados.b.cnaeDesc : '', situacao: dados.b ? (dados.b.situacao || '').toUpperCase() : '',
+    simples: dados.b ? dados.b.simples : null, contrib: radio('b-contrib') === '1', destino: radio('b-destino')
+  };
+  const on = $('#e-on').checked;
+  const e = on ? {
+    tipo: radio('e-tipo'), doc: digits($('#e-doc').value), nome: $('#e-nome').value.trim(), uf: $('#e-uf').value, mun: $('#e-mun').value.trim(),
+    contrib: radio('e-tipo') === 'pj' && radio('e-contrib') === '1', situacao: dados.e ? (dados.e.situacao || '').toUpperCase() : '', cnaeDesc: dados.e ? dados.e.cnaeDesc : ''
+  } : null;
+  return { b, e, st: $('#st').checked };
+}
+function validar({ b, e }) {
+  const errs = [];
+  if (b.cnpj.length !== 14 || !validaCNPJ(b.cnpj)) errs.push('Informe um CNPJ válido para o cliente comprador.');
+  if (!b.uf) errs.push('Informe a UF do cliente comprador.');
+  if (e) {
+    if (e.tipo === 'pj' && (e.doc.length !== 14 || !validaCNPJ(e.doc))) errs.push('Informe um CNPJ válido para o local de entrega.');
+    if (e.tipo === 'pf' && e.doc && !validaCPF(e.doc)) errs.push('O CPF do recebedor é inválido.');
+    if (!e.uf) errs.push('Informe a UF do local de entrega.');
+  }
+  return errs;
+}
+const pre = (uf) => uf === EMITENTE.uf ? '5' : '6';
+const difal = (uf) => (ALIQ_INTERNA[uf] ?? 18) - ALIQ_INTER;
+const nomeOu = (n, fb) => n || fb;
+const cnpjTxt = (d) => d.length === 14 ? fmtCNPJ(d) : (d.length === 11 ? fmtCPF(d) : '—');
+const local = (mun, uf) => esc([mun, uf].filter(Boolean).join('/'));
+
+function icmsVendaDireta(destUF, contrib, consumoFinal, st) {
+  const interno = destUF === EMITENTE.uf;
+  const linhas = [];
+  if (interno) linhas.push(`ICMS próprio destacado à alíquota interna do ${EMITENTE.uf}: <b>${pct(ALIQ_INTERNA[EMITENTE.uf])}</b> (verificar alíquota específica do produto/NCM e eventuais reduções de base).`);
+  else linhas.push(`ICMS próprio destacado à alíquota interestadual: <b>${pct(ALIQ_INTER)}</b> (4% se mercadoria importada — Res. SF 13/2012).`);
+  if (!interno && !contrib) linhas.push(`<b>DIFAL devido pelo remetente</b> à UF de destino (EC 87/2015 • LC 190/2022 • Conv. ICMS 236/2021): alíquota interna ${destUF} ${pct(ALIQ_INTERNA[destUF] ?? 18)} − ${pct(ALIQ_INTER)} = <b>${pct(difal(destUF))}</b> (base dupla se exigida pela UF; recolher por GNRE ou inscrição de substituto na UF).`);
+  if (!interno && contrib && consumoFinal) linhas.push(`<b>DIFAL devido pelo destinatário</b> (contribuinte adquirindo para uso/consumo/ativo — CF art. 155, §2º, VII): ${pct(difal(destUF))} recolhido pelo comprador em ${destUF}, salvo Convênio/Protocolo que atribua ST ao remetente.`);
+  if (st) {
+    if (interno && !consumoFinal) linhas.push(`<b>ICMS-ST retido</b> pelo remetente (substituto) sobre as operações subsequentes — base MVA/PMPF conforme RICMS/CE.`);
+    else if (interno && consumoFinal) linhas.push(`Venda a consumidor final: <b>não há ICMS-ST</b> (sem operação subsequente).`);
+    else if (!interno && contrib && !consumoFinal) linhas.push(`<b>ICMS-ST interestadual</b> somente se houver Convênio/Protocolo entre ${EMITENTE.uf} e ${destUF} para o produto; caso contrário, o destinatário recolhe por antecipação na entrada.`);
+    else if (!interno && contrib && consumoFinal) linhas.push(`ST-DIFAL: se houver Convênio/Protocolo ${EMITENTE.uf}↔${destUF}, o remetente retém o DIFAL como substituto.`);
+    else linhas.push(`Consumidor final não contribuinte: <b>não há ICMS-ST</b>, aplica-se apenas o DIFAL (EC 87/2015).`);
+  }
+  return linhas;
+}
+function cfopVendaDireta(destUF, contrib, consumoFinal, st) {
+  const p = pre(destUF); const interno = p === '5';
+  if (!interno && !contrib) return `${p}.107 (produção própria) / ${p}.108 (revenda) — venda a não contribuinte`;
+  if (st && !consumoFinal) return `${p}.401 (produção própria) / ${p}.403 (revenda) — substituto tributário`;
+  if (st && !interno && contrib && consumoFinal) return `${p}.401 / ${p}.403 se ST-DIFAL por Protocolo; senão ${p}.101 / ${p}.102`;
+  return `${p}.101 (produção própria) / ${p}.102 (revenda)`;
+}
+function camposNFe(destUF, contrib, consumoFinal, extra = []) {
+  return [
+    `<code>idDest</code> = ${destUF === EMITENTE.uf ? '1 (operação interna)' : '2 (interestadual)'}`,
+    `<code>indFinal</code> = ${consumoFinal ? '1 (consumidor final)' : '0 (normal)'}`,
+    `<code>indIEDest</code> = ${contrib ? '1 (contribuinte ICMS)' : '9 (não contribuinte)'}`,
+    ...extra
+  ];
+}
+
+function avaliar(inp) {
+  const { b, e, st } = inp;
+  const R = { badge: { cls: 'ok', txt: '' }, titulo: '', desc: '', base: '', fluxo: [], steps: [], alertas: [] };
+  const A = { k: 'A • REMETENTE', n: EMITENTE.rotulo, d: `${EMITENTE.cnpj} • ${EMITENTE.municipio}/${EMITENTE.uf}` };
+  const B = { k: 'B • COMPRADOR', n: nomeOu(b.razao, 'Cliente comprador'), d: `${cnpjTxt(b.cnpj)} • ${[b.mun, b.uf].filter(Boolean).join('/')}` };
+  const consumoB = !b.contrib || b.destino === 'consumo';
+  const al = (nivel, t) => R.alertas.push({ nivel, t });
+
+  /* --- Alertas cadastrais gerais --- */
+  if (b.situacao && b.situacao !== 'ATIVA') al('err', `Situação cadastral do comprador na Receita Federal: <b>${titleCase(b.situacao)}</b>. Não emita NF-e para CNPJ inapto/baixado/suspenso.`);
+  if (e && e.situacao && e.situacao !== 'ATIVA') al('err', `Situação cadastral do recebedor: <b>${titleCase(e.situacao)}</b>. Verifique antes de emitir a nota de remessa.`);
+  if (!b.contrib && b.destino === 'revenda') al('err', 'Inconsistência: cliente <b>não contribuinte</b> com destino <b>Revenda</b>. Quem revende mercadoria é contribuinte do ICMS e precisa de IE ativa. Regularize o cadastro do cliente ou trate a operação como uso/consumo.');
+  const div = b.cnae.slice(0, 2);
+  const construcao = ['41', '42', '43'].includes(div);
+  const comercio = ['45', '46', '47'].includes(div);
+  if (construcao) {
+    al('info', `CNAE de <b>construção civil</b> (${esc(b.cnaeDesc)}). Empresas de construção são, em regra, tratadas como <b>não contribuintes</b> do ICMS (mesmo com IE para obrigações acessórias) — STJ, Súmula 432 e entendimento das UFs. ${b.destino === 'revenda' ? '<b>Destino "Revenda" é incomum para esse CNAE</b>; confirme.' : 'Para aquisição interestadual, aplica-se DIFAL de não contribuinte recolhido pelo remetente.'}`);
+    if (b.contrib && b.destino === 'revenda') al('warn', 'Construtora com destino Revenda: a venda à ordem só é válida se o cliente efetivamente revende (NF-e de venda própria para o recebedor). Caso contrário, trate como entrega em obra (uso/consumo).');
+  } else if (b.cnae && !comercio && b.destino === 'revenda') al('info', `CNAE principal do comprador (${esc(b.cnaeDesc)}) não é de comércio. Destino "Revenda" é possível se houver CNAE secundário comercial — confirme.`);
+  if (b.simples === true) al('info', 'Comprador optante pelo <b>Simples Nacional</b>: não aproveita crédito do ICMS destacado; em venda à ordem a NF-e de venda dele (B→C) sai com CSOSN. Não altera o procedimento do remetente.');
+  if (st && b.uf !== EMITENTE.uf && b.contrib) al('warn', `Produto com ICMS-ST em operação interestadual ${EMITENTE.uf}→${esc(b.uf)}: verifique se há <b>Convênio/Protocolo</b> para o NCM. Sem acordo, não destaque ST — o destinatário recolhe antecipação na entrada.`);
+
+  /* ======== CENÁRIO 1: entrega no endereço do comprador ======== */
+  if (!e || (e.tipo === 'pj' && e.doc === b.cnpj)) {
+    if (e) al('info', 'O CNPJ de entrega é o próprio comprador — não há triangulação. Tratado como venda direta.');
+    R.badge = { cls: 'ok', txt: 'SEM TRIANGULAÇÃO' };
+    R.titulo = 'Venda direta — entrega no estabelecimento do comprador';
+    R.desc = 'Operação bilateral comum: uma única NF-e de venda. Não se aplica o art. 40 do Convênio SINIEF s/nº.';
+    R.base = `Base Legal: <b>RICMS/CE</b> (operação ${b.uf === EMITENTE.uf ? 'interna' : 'interestadual'})${b.uf !== EMITENTE.uf && consumoB ? ' • <b>EC 87/2015 • LC 190/2022 • Conv. ICMS 236/2021</b> (DIFAL)' : ''}${st ? ' • <b>Conv. ICMS 142/2018</b> (ICMS-ST)' : ''}`;
+    R.fluxo = [A, { arrow: 'Venda + entrega', sub: 'NF-e única' }, B];
+    R.steps.push({
+      titulo: 'NF-e de Venda', who: `Emitente: <b>A (remetente)</b> → Destinatário: <b>B (${esc(B.n)})</b>`,
+      kv: [['Natureza', 'Venda de mercadoria'], ['CFOP', cfopVendaDireta(b.uf, b.contrib, consumoB, st)], ['Finalidade', '<code>finNFe</code> = 1 (normal)'], ['Transporte', 'Dados do transportador e volumes normalmente'], ['Local de entrega', 'Não preencher o grupo <code>&lt;entrega&gt;</code> (entrega no endereço cadastral)']],
+      icms: icmsVendaDireta(b.uf, b.contrib, consumoB, st),
+      campos: camposNFe(b.uf, b.contrib, consumoB)
+    });
+    return R;
+  }
+
+  /* --- dados do recebedor (C) --- */
+  const pf = e.tipo === 'pf';
+  const raizIgual = !pf && e.doc.slice(0, 8) === b.cnpj.slice(0, 8);
+  const C = { k: pf ? 'C • RECEBEDOR (PF/OBRA)' : (raizIgual ? 'C • FILIAL DO COMPRADOR' : 'C • RECEBEDOR (TERCEIRO)'), n: nomeOu(e.nome, pf ? 'Pessoa física / obra' : 'Recebedor'), d: `${e.doc ? cnpjTxt(e.doc) + ' • ' : ''}${[e.mun, e.uf].filter(Boolean).join('/')}` };
+
+  /* ======== CENÁRIO 2: filial do comprador ======== */
+  if (raizIgual) {
+    const mesmaUF = e.uf === b.uf;
+    R.badge = { cls: mesmaUF ? 'info' : 'warn', txt: 'ENTREGA EM FILIAL' };
+    R.titulo = 'Faturamento para a matriz/filial com entrega em outro estabelecimento do mesmo grupo';
+    R.desc = 'Não é venda à ordem: não há venda subsequente de B para C. Cada estabelecimento é autônomo para o ICMS (LC 87/96, art. 11, §3º, II).';
+    R.base = `Base Legal: <b>LC 87/96, art. 11, §3º, II</b> (autonomia dos estabelecimentos) • <b>LC 87/96, art. 11, §7º</b> (LC 190/2022 — DIFAL pelo local da entrada física) • <b>RICMS/CE</b> • Manual NF-e, grupo G (<code>&lt;entrega&gt;</code>)`;
+    R.fluxo = [A, { arrow: 'NF-e de venda', sub: 'faturada para B' }, B, { arrow: 'entrega física', sub: 'grupo &lt;entrega&gt;' }, C];
+    if (mesmaUF) {
+      R.steps.push({
+        titulo: 'NF-e de Venda com Local de Entrega diverso', who: `Emitente: <b>A</b> → Destinatário: <b>B (${esc(B.n)})</b> • Entrega em: <b>C (${esc(C.n)})</b>`,
+        kv: [['Natureza', 'Venda de mercadoria'], ['CFOP', cfopVendaDireta(b.uf, b.contrib, consumoB, st)], ['Grupo &lt;entrega&gt;', `CNPJ ${cnpjTxt(e.doc)}, IE da filial, endereço completo em ${local(e.mun, e.uf)}`], ['Inf. complementares', '"Mercadoria entregue em estabelecimento filial do destinatário: [razão social, CNPJ, endereço]"']],
+        icms: icmsVendaDireta(b.uf, b.contrib, consumoB, st),
+        campos: camposNFe(b.uf, b.contrib, consumoB)
+      });
+      al('info', 'Filial na <b>mesma UF</b> do comprador: a NF-e com grupo Local de Entrega é aceita pela SEFAZ e o tratamento tributário não muda. Alternativa igualmente válida: faturar diretamente contra o CNPJ da filial.');
+    } else {
+      R.steps.push({
+        titulo: 'Opção recomendada — NF-e de Venda faturada diretamente para a filial recebedora', who: `Emitente: <b>A</b> → Destinatário: <b>C (${esc(C.n)}, ${esc(e.uf)})</b>`,
+        kv: [['Natureza', 'Venda de mercadoria'], ['CFOP', cfopVendaDireta(e.uf, e.contrib, consumoB, st)], ['Destinatário', `CNPJ da filial ${cnpjTxt(e.doc)} com IE própria em ${esc(e.uf)}`], ['Motivo', 'A tributação (alíquota interestadual, DIFAL, ST) segue a UF da entrada física; faturar e entregar no mesmo estabelecimento elimina divergência entre destinatário e local de entrega']],
+        icms: icmsVendaDireta(e.uf, e.contrib, consumoB, st),
+        campos: camposNFe(e.uf, e.contrib, consumoB)
+      });
+      R.steps.push({
+        alt: true, titulo: 'Alternativa — faturar para B com Local de Entrega na filial de outra UF', who: `Emitente: <b>A</b> → Destinatário: <b>B (${esc(b.uf)})</b> • Entrega: <b>C (${esc(e.uf)})</b>`,
+        kv: [['CFOP', `${cfopVendaDireta(e.uf, e.contrib, consumoB, st)} — determinado pela UF de entrega física`], ['Grupo &lt;entrega&gt;', `CNPJ ${cnpjTxt(e.doc)}, IE e endereço da filial em ${esc(e.uf)}`], ['Risco', 'Divergência entre UF do destinatário e UF de entrega gera questionamento de DIFAL/ST nas duas UFs e exige amparo no RICMS da UF do comprador']],
+        icms: [`Alíquota e DIFAL calculados pela UF de entrada física (<b>${esc(e.uf)}</b>) — LC 87/96, art. 11, §7º.`, ...icmsVendaDireta(e.uf, e.contrib, consumoB, st)],
+        campos: camposNFe(e.uf, e.contrib, consumoB)
+      });
+      al('warn', `Filial em <b>UF diferente</b> (${esc(b.uf)} → ${esc(e.uf)}): o ICMS é devido conforme o local da <b>entrada física</b> da mercadoria. Faturar para a matriz e entregar na filial de outro estado é a hipótese de maior risco fiscal — prefira faturar diretamente a filial.`);
+    }
+    if (st) al('info', 'Com ICMS-ST, a retenção é calculada para a UF onde a mercadoria entra fisicamente. Verifique Convênio/Protocolo com essa UF.');
+    return R;
+  }
+
+  /* ======== CENÁRIO 3: venda à ordem (B contribuinte revende para C) ======== */
+  if (b.contrib && b.destino === 'revenda') {
+    const consumoC = !e.contrib;
+    const pBC = b.uf === e.uf ? '5' : '6';
+    R.badge = { cls: 'ok', txt: 'VENDA À ORDEM • ART. 40' };
+    R.titulo = 'Venda à ordem — triangulação com três notas fiscais';
+    R.desc = 'B (adquirente originário) compra de A e revende a C; A entrega diretamente a C por conta e ordem de B.';
+    R.base = 'Base Legal: <b>Convênio SINIEF s/nº de 1970, art. 40, §3º</b> (venda à ordem) • <b>Ajuste SINIEF 07/2005</b> (NF-e) • <b>RICMS/CE</b>' + (st ? ' • <b>Conv. ICMS 142/2018</b>' : '');
+    R.fluxo = [A, { arrow: 'Remessa simbólica', sub: `NF ${pre(b.uf)}.118/.119` }, B, { arrow: 'Venda de B', sub: `NF ${pBC}.120` }, C];
+    R.steps.push({
+      titulo: 'NF-e de Venda do adquirente originário para o destinatário', who: `Emitente: <b>B (${esc(B.n)})</b> → Destinatário: <b>C (${esc(C.n)})</b> — <i>responsabilidade do cliente comprador</i>`,
+      kv: [['Natureza', 'Venda à ordem'], ['CFOP', `${pBC}.120 — Venda de mercadoria adquirida de terceiros, entregue ao destinatário pelo vendedor remetente, em venda à ordem${st ? ` (se ST já retida por A: ${pBC === '5' ? '5.405' : '6.404'})` : ''}`], ['ICMS', `Destaque conforme regra de B (${st ? 'sem destaque próprio se substituído com ST retida' : 'débito normal'})${consumoC && b.uf !== e.uf ? ' + DIFAL de B para a UF de C' : ''}`], ['Inf. complementares', `"Mercadoria a ser entregue por ${esc(EMITENTE.rotulo)}, CNPJ ${EMITENTE.cnpj}, IE [IE de A], ${EMITENTE.municipio}/${EMITENTE.uf}"`], ['Transporte', 'Sem dados de transporte (entrega feita por A) — <code>modFrete</code> conforme contrato B→C']],
+      icms: [`A nota de B deve ser emitida <b>antes</b> da remessa de A, pois sua chave será referenciada na NF-e de remessa.`],
+      campos: [`<code>idDest</code> = ${pBC === '5' ? '1' : '2'}`, `<code>indFinal</code> = ${consumoC ? '1' : '0'}`, `<code>indIEDest</code> = ${e.contrib ? '1' : '9'}`]
+    });
+    R.steps.push({
+      titulo: 'NF-e de Remessa por Conta e Ordem de Terceiros (acompanha o transporte)', who: `Emitente: <b>A (remetente)</b> → Destinatário: <b>C (${esc(C.n)})</b>`,
+      kv: [['Natureza', '"Remessa por Conta e Ordem de Terceiros" (art. 40, §3º, II, "a")'], ['CFOP', `${pre(e.uf)}.923 — Remessa de mercadoria por conta e ordem de terceiros, em venda à ordem`], ['ICMS', '<b>Sem destaque</b> de ICMS/ST (CST 41 – Não tributada; Simples: CSOSN 400)'], ['NF referenciada', 'Chave da NF-e de venda B→C (grupo <code>&lt;refNFe&gt;</code>)'], ['Inf. complementares', `"Remessa por conta e ordem de ${esc(B.n)}, CNPJ ${cnpjTxt(b.cnpj)}, IE [IE de B], ${local(b.mun, b.uf)}, conforme NF-e nº [n], série [s], de [data]"`], ['Transporte', 'Transportador, placa e volumes — esta nota acompanha a mercadoria']],
+      icms: [`Valor dos produtos: o mesmo da operação, apenas para fins de controle (sem tributação).`, pf ? 'Destinatário pessoa física: informar CPF e endereço da obra/residência onde a mercadoria será entregue.' : ''].filter(Boolean),
+      campos: camposNFe(e.uf, e.contrib, consumoC, ['<code>finNFe</code> = 1 • <code>indPres</code> = 9'])
+    });
+    R.steps.push({
+      titulo: 'NF-e de Remessa Simbólica – Venda à Ordem (nota de faturamento)', who: `Emitente: <b>A (remetente)</b> → Destinatário: <b>B (${esc(B.n)})</b>`,
+      kv: [['Natureza', '"Remessa Simbólica – Venda à Ordem" (art. 40, §3º, II, "b")'], ['CFOP', `${pre(b.uf)}.118 (produção própria) / ${pre(b.uf)}.119 (adquirida de terceiros)`], ['ICMS', '<b>Com destaque</b> do ICMS próprio' + (st ? ' <b>e do ICMS-ST</b> (A como substituto)' : '')], ['NF referenciada', 'Chave da NF-e de remessa A→C (grupo <code>&lt;refNFe&gt;</code>)'], ['Inf. complementares', `"Remessa simbólica – venda à ordem. Mercadoria entregue a ${esc(C.n)}, ${e.doc ? 'CNPJ/CPF ' + cnpjTxt(e.doc) + ', ' : ''}${local(e.mun, e.uf)}, conforme NF-e de remessa nº [n], série [s], de [data]"`], ['Transporte', '<code>modFrete</code> = 9 (sem ocorrência de transporte)']],
+      icms: icmsVendaDireta(b.uf, true, false, st),
+      campos: camposNFe(b.uf, true, false)
+    });
+    al('ok', 'Cenário enquadrado no art. 40 do Convênio SINIEF s/nº: B é contribuinte e revende. Ordem de emissão: <b>1º NF de B→C</b>, <b>2º remessa A→C</b> (referenciando a de B), <b>3º remessa simbólica A→B</b> (referenciando a remessa).');
+    if (b.uf !== e.uf) al('info', `B (${esc(b.uf)}) e C (${esc(e.uf)}) em UFs diferentes: a nota de venda de B é interestadual (6.120)${consumoC ? ' com <b>DIFAL de responsabilidade de B</b> para a UF de C' : ''}. Para A, a tributação da remessa simbólica segue a UF de B (${esc(b.uf)}).`);
+    if (e.uf !== EMITENTE.uf && b.uf === EMITENTE.uf) al('warn', `A mercadoria sai fisicamente do ${EMITENTE.uf} para ${esc(e.uf)}, mas o faturamento de A é interno (B em ${esc(b.uf)}). Fiscalizações de fronteira exigem que a NF de remessa (${pre(e.uf)}.923) acompanhe a carga com a referência à NF de B. Mantenha o DANFE das três notas disponível.`);
+    if (consumoC && e.uf !== b.uf) al('info', 'C é consumidor final em outra UF: o DIFAL (EC 87/2015) é da operação B→C e, portanto, obrigação de B — não do remetente A.');
+    if (st) al('warn', `Com ICMS-ST: a retenção ocorre na <b>remessa simbólica A→B</b> (${pre(b.uf)}.118/.119)${b.uf !== EMITENTE.uf ? ', somente se houver Convênio/Protocolo ' + EMITENTE.uf + '↔' + esc(b.uf) : ''}. A nota de remessa física A→C sai sem destaque.`);
+    if (pf) al('info', 'Destinatário pessoa física: a venda à ordem continua válida (B vende a consumidor final). A NF-e de B→C é NFC-e ou NF-e com CPF; a remessa de A é NF-e modelo 55 com CPF do recebedor.');
+    return R;
+  }
+
+  /* ======== CENÁRIO 4/5: entrega em local diverso (uso/consumo ou B não contribuinte) ======== */
+  const naoContrib = !b.contrib;
+  R.badge = { cls: 'warn', txt: naoContrib ? 'NÃO É VENDA À ORDEM • B NÃO CONTRIBUINTE' : 'ENTREGA EM LOCAL DIVERSO • USO/CONSUMO' };
+  R.titulo = naoContrib ? 'Venda a não contribuinte com entrega em local diverso' : 'Venda para uso/consumo com entrega em local diverso (obra / terceiro)';
+  R.desc = naoContrib
+    ? 'B não é contribuinte e não emite NF-e de venda a C, logo não existe venda à ordem. Emite-se uma única NF-e de venda a B com o grupo Local de Entrega.'
+    : 'Não há revenda de B para C, portanto não se aplica o art. 40. A mercadoria é faturada a B e entregue no local indicado via grupo Local de Entrega.';
+  R.base = `Base Legal: <b>Ajuste SINIEF 07/2005</b> e Manual NF-e (grupo G – <code>&lt;entrega&gt;</code>) • <b>LC 87/96, art. 11, §7º</b> (LC 190/2022) • <b>RICMS/CE</b>${e.uf !== EMITENTE.uf ? ' • <b>EC 87/2015 • Conv. ICMS 236/2021</b> (DIFAL)' : ''}`;
+  R.fluxo = [A, { arrow: 'NF-e de venda', sub: 'faturada para B' }, B, { arrow: 'entrega física', sub: 'grupo &lt;entrega&gt;' }, C];
+  const ufTrib = e.uf;
+  const contribTrib = b.contrib;
+  R.steps.push({
+    titulo: 'NF-e de Venda com Local de Entrega diverso', who: `Emitente: <b>A</b> → Destinatário: <b>B (${esc(B.n)})</b> • Entrega em: <b>C (${esc(C.n)})</b>`,
+    kv: [['Natureza', 'Venda de mercadoria'], ['CFOP', cfopVendaDireta(ufTrib, contribTrib, true, st) + (ufTrib !== b.uf ? ' — pela UF de entrega física' : '')], ['Grupo &lt;entrega&gt;', `${pf ? (e.doc ? 'CPF ' + cnpjTxt(e.doc) : 'CPF do responsável pela obra') : 'CNPJ ' + cnpjTxt(e.doc) + (e.contrib ? ' + IE' : '')}, nome e endereço completo em ${local(e.mun, e.uf)}`], ['Inf. complementares', `"Mercadoria entregue por conta e ordem do destinatário em: ${esc(C.n)}, ${local(e.mun, e.uf)}${construcao || b.destino === 'consumo' ? ' (obra/uso e consumo)' : ''}"`], ['Transporte', 'Dados do transportador e volumes normalmente']],
+    icms: [ufTrib !== b.uf ? `UF do comprador (${esc(b.uf)}) difere da UF de entrega (${esc(e.uf)}): a tributação segue o local da <b>entrada física</b> (LC 87/96, art. 11, §7º).` : '', ...icmsVendaDireta(ufTrib, contribTrib, true, st)].filter(Boolean),
+    campos: camposNFe(ufTrib, contribTrib, true)
+  });
+  if (naoContrib) al('warn', 'Comprador <b>não contribuinte</b>: não pode haver venda à ordem (B não emite NF-e de venda). Use o grupo Local de Entrega. Se o recebedor C for empresa que irá <b>revender</b>, a operação correta é vender diretamente a C.');
+  else al('warn', 'Comprador contribuinte adquirindo para <b>uso/consumo/obra</b>: não há operação subsequente de B para C, logo não é venda à ordem. Se B for, na verdade, revender a C, altere o destino para "Revenda".');
+  if (ufTrib !== b.uf) al('warn', `UF de entrega (${esc(e.uf)}) diferente da UF do comprador (${esc(b.uf)}): o ICMS/DIFAL é devido à UF da entrada física (${esc(e.uf)}). A SEFAZ de ${esc(b.uf)} pode questionar o não recolhimento; documente a entrega e consulte o fiscal sobre a exigência de IE/cadastro de obra.`);
+  if (e.contrib && !pf) al('info', `O recebedor C é contribuinte (${esc(e.cnaeDesc || 'IE ativa')}). Se C for industrializador ou armazém/depósito, o procedimento correto é outro: <b>industrialização por conta e ordem (Conv. SINIEF s/nº, art. 42)</b> ou <b>armazém geral/depósito fechado (arts. 26 a 39)</b>.`);
+  if (pf && !e.doc) al('info', 'Obra sem CPF/CNPJ: o grupo Local de Entrega exige CNPJ ou CPF. Informe o CPF do responsável pela obra (ou o CNPJ do comprador) com o endereço da obra.');
+  if (construcao || (pf && b.destino === 'consumo')) al('info', 'Entrega em canteiro de obra: guarde a ordem de compra/contrato que indique o endereço da obra como local de entrega para comprovar o destino em eventual fiscalização.');
+  if (st) al('info', 'Venda a consumidor final (uso/consumo): não há ICMS-ST sobre operações subsequentes' + (ufTrib !== EMITENTE.uf && b.contrib ? '; pode haver <b>ST-DIFAL</b> se existir Convênio/Protocolo com a UF de entrega' : '') + '.');
+  return R;
+}
+
+/* ============================================================
+   Renderização
+   ============================================================ */
+const ICON = {
+  err: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+  warn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  ok: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.1V12a10 10 0 11-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>'
+};
+let ultimo = null;
+function render(R) {
+  ultimo = R;
+  const badge = $('#r-badge'); badge.className = 'badge ' + R.badge.cls; badge.textContent = R.badge.txt;
+  $('#r-titulo').textContent = R.titulo; $('#r-desc').textContent = R.desc; $('#r-base').innerHTML = R.base;
+  const nodes = R.fluxo.filter(f => !f.arrow).length;
+  $('#r-fluxo').innerHTML = R.fluxo.length ? `<div class="fluxo ${nodes === 2 ? 'two' : ''}">` + R.fluxo.map(f => f.arrow
+    ? `<div class="arrow"><b>→</b>${esc(f.arrow)}<br><span>${f.sub}</span></div>`
+    : `<div class="node"><div class="k">${esc(f.k)}</div><div class="n" title="${esc(f.n)}">${esc(f.n)}</div><div class="d">${esc(f.d)}</div></div>`).join('') + '</div>' : '';
+  let n = 0;
+  $('#r-steps').innerHTML = R.steps.map(s => `
+    <div class="step ${s.alt ? 'alt' : ''}">
+      <div class="step-h"><span class="num">${s.alt ? 'alt' : ++n}</span><h3>${s.titulo}</h3><div class="who">${s.who}</div></div>
+      <dl class="kv">${s.kv.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${s.icms && s.icms.length ? `<dl class="kv" style="margin-top:8px"><dt>Tributação</dt><dd><ul style="margin:0;padding-left:16px">${s.icms.map(l => `<li>${l}</li>`).join('')}</ul></dd></dl>` : ''}
+      ${s.campos && s.campos.length ? `<dl class="kv" style="margin-top:8px"><dt>Campos NF-e</dt><dd>${s.campos.join(' • ')}</dd></dl>` : ''}
+    </div>`).join('');
+  const ordem = { err: 0, warn: 1, ok: 2, info: 3 };
+  const als = [...R.alertas].sort((a, b) => ordem[a.nivel] - ordem[b.nivel]);
+  $('#r-alertas').innerHTML = als.length ? als.map(a => `<li class="alerta ${a.nivel}">${ICON[a.nivel]}<div class="t">${a.t}</div></li>`).join('') : '<li class="alerta ok">' + ICON.ok + '<div class="t">Nenhum alerta adicional para esta operação.</div></li>';
+  const res = $('#resultado'); res.classList.add('show'); res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('#form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const inp = coletar(); const errs = validar(inp);
+  if (errs.length) {
+    render({ badge: { cls: 'err', txt: 'DADOS INCOMPLETOS' }, titulo: 'Preencha os campos obrigatórios', desc: '', base: '', fluxo: [], steps: [], alertas: errs.map(t => ({ nivel: 'err', t })) });
+    return;
+  }
+  render(avaliar(inp));
+});
+
+$('#btn-print').addEventListener('click', () => window.print());
+$('#btn-copiar').addEventListener('click', async () => {
+  if (!ultimo) return;
+  const strip = (h) => String(h).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  let t = `${ultimo.badge.txt}\n${ultimo.titulo}\n${ultimo.desc}\n${strip(ultimo.base)}\n\nPROCEDIMENTO DE EMISSÃO\n`;
+  let n = 0;
+  ultimo.steps.forEach(s => { t += `\n${s.alt ? '[Alternativa]' : (++n) + '.'} ${strip(s.titulo)}\n   ${strip(s.who)}\n`; s.kv.forEach(([k, v]) => t += `   - ${strip(k)}: ${strip(v)}\n`); (s.icms || []).forEach(l => t += `   - Tributação: ${strip(l)}\n`); if (s.campos) t += `   - Campos NF-e: ${strip(s.campos.join(' | '))}\n`; });
+  t += '\nALERTAS\n' + ultimo.alertas.map(a => `- [${a.nivel.toUpperCase()}] ${strip(a.t)}`).join('\n') + `\n\nGerado em ${new Date().toLocaleString('pt-BR')} • Simulador Fiscal de Triangulação`;
+  try { await navigator.clipboard.writeText(t); $('#btn-copiar').textContent = 'Copiado!'; setTimeout(() => $('#btn-copiar').textContent = 'Copiar procedimento', 1800); } catch { alert('Não foi possível copiar automaticamente.'); }
+});
+</script>
+</body>
+</html>
