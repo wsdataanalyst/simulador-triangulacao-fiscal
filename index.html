@@ -206,9 +206,10 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
         <h3 class="section-title"><span class="num">2</span> Local de Entrega Física da Mercadoria</h3>
         <p class="hint">Onde a mercadoria será entregue fisicamente? <span class="req">*</span> Esta resposta define se há ou não triangulação.</p>
         <div class="seg seg-big">
-          <label><input type="radio" name="e-local" value="comprador" checked><span>No endereço do próprio comprador (CNPJ faturado)</span></label>
+          <label><input type="radio" name="e-local" value="comprador" checked><span id="e-local-lbl">No endereço do próprio comprador (CNPJ faturado)</span></label>
           <label><input type="radio" name="e-local" value="outro"><span>Em outro endereço / CNPJ — terceiro, cliente do meu cliente, filial ou obra</span></label>
         </div>
+        <div class="field-note warn" id="e-local-note"></div>
         <div class="collapse" id="e-box">
           <p class="hint">Informe o CNPJ do recebedor (se Pessoa Jurídica) ou selecione Pessoa Física / Obra sem CNPJ.</p>
           <div class="grid">
@@ -439,6 +440,12 @@ $('#form').addEventListener('change', atualizaResumo);
 $('#form').addEventListener('input', atualizaResumo);
 
 function atualizaResumo() {
+  const bUf = $('#b-uf').value, bMun = $('#b-mun').value.trim();
+  const onde = [bMun, bUf].filter(Boolean).join('/');
+  $('#e-local-lbl').textContent = 'No endereço do próprio comprador' + (onde ? ' — a mercadoria será transportada até ' + onde : ' (CNPJ faturado)');
+  $('#e-local-note').textContent = (bUf && bUf !== EMITENTE.uf && !entregaOutro())
+    ? `Atenção: comprador em ${bUf}. Se a mercadoria NÃO sair do ${EMITENTE.uf} (entrega a um cliente dele, filial ou obra aqui), a operação é triangulação — escolha "Em outro endereço / CNPJ".`
+    : '';
   const parts = [];
   if (!entregaOutro()) parts.push('A mercadoria será entregue diretamente no endereço cadastral do CNPJ comprador.');
   else {
@@ -550,6 +557,7 @@ function avaliar(inp) {
   if (!e || (e.tipo === 'pj' && e.doc === b.cnpj)) {
     if (e) al('warn', 'O CNPJ de entrega informado é o <b>próprio comprador</b>, portanto não há terceiro envolvido e não há triangulação. Se a mercadoria vai para o cliente do seu cliente, informe o CNPJ/CPF desse recebedor.');
     else al('warn', 'Resultado baseado na resposta <b>"entrega no endereço do próprio comprador"</b>. Se a mercadoria for entregue a um terceiro (cliente do seu cliente), filial ou obra, selecione <b>"Em outro endereço / CNPJ"</b> na seção 2 — o enquadramento muda para venda à ordem ou entrega em local diverso.');
+    if (b.uf !== EMITENTE.uf) al('warn', `Este resultado pressupõe que a mercadoria será <b>transportada do ${EMITENTE.uf} até ${esc([b.mun, b.uf].filter(Boolean).join('/'))}</b> (CFOP 6.xxx). Se ela ficar no ${EMITENTE.uf} e for entregue a outra pessoa, a operação é <b>triangulação</b> e deve ser refeita marcando "Em outro endereço / CNPJ".`);
     if (b.contrib && b.destino === 'revenda' && b.uf !== EMITENTE.uf) al('info', `Comprador contribuinte em ${esc(b.uf)} que revende: se ele pedir entrega direta ao cliente dele, a operação é <b>venda à ordem</b> (art. 40) — três notas: venda B→C, remessa A→C (x.923, sem ICMS) e remessa simbólica A→B (6.118/6.119, com ICMS).`);
     R.badge = { cls: 'ok', txt: 'SEM TRIANGULAÇÃO' };
     R.titulo = 'Venda direta — entrega no estabelecimento do comprador';
