@@ -176,6 +176,48 @@ label.lbl .sub{font-weight:500;color:var(--text-3)}
 }
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;line-height:1.6}
+/* Abas */
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px;margin-bottom:18px;box-shadow:var(--shadow)}
+.tab{flex:1;appearance:none;border:0;background:transparent;color:var(--text-2);font:inherit;font-weight:700;font-size:14px;padding:11px 14px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,.3)}
+.tab .ic{font-size:16px}
+.pane{display:none}.pane.active{display:block}
+.seg-col{flex-direction:column}.seg-col label{min-width:0}
+.seg-big label span b{font-weight:800}
+.tone-dep{--tone:var(--warn);--tone-2:#92400e;--tone-soft:var(--warn-soft);--tone-ink:var(--warn)}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:720px){.m-grid{grid-template-columns:1fr}}
+.m-box{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}
+.m-box .h{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--tone-soft);border-bottom:1px solid var(--border);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--tone-ink)}
+.m-box .b{padding:14px}
+.m-box .big{font-size:22px;font-weight:800;color:var(--text);margin:0 0 4px}
+.m-box ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--text-2)}
+.m-box ul li{margin:4px 0}
+.m-box ul li b{color:var(--text)}
+.who-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--tone);color:#fff;font-weight:800;font-size:15px}
+.who-chip.none{background:var(--text-3)}
+.wa{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden}
+.wa .h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;background:#dcfce7;border-bottom:1px solid var(--border);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#166534;flex-wrap:wrap}
+:root[data-theme="dark"] .wa .h{background:#052e16;color:#86efac}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wa .h{background:#052e16;color:#86efac}}
+.wa .msg{padding:14px;white-space:pre-wrap;font-size:14px;line-height:1.55;color:var(--text)}
+.wa .acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn-wa{background:#25d366;border-color:#25d366;color:#fff}
+.btn-wa:hover{background:#1ebe5a;color:#fff;border-color:#1ebe5a}
+.btn-sm{padding:6px 10px;font-size:13px}
+.faq details{border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:8px;overflow:hidden}
+.faq summary{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:18px;color:var(--brand);font-weight:800;flex-shrink:0}
+.faq details[open] summary::after{content:"–"}
+.faq details[open] summary{background:var(--brand-soft);color:var(--brand-text)}
+.faq .a{padding:4px 14px 14px;font-size:13.5px;color:var(--text-2);line-height:1.55}
+.faq .a b{color:var(--text)}
+.faq .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand-text);margin-right:6px}
+.pend{display:grid;gap:8px}
+.pend .q{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--text);font-size:14px;font-weight:600}
+.pend .q i{font-style:normal;background:var(--warn);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border-strong);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:4px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media print{
@@ -199,6 +241,12 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
     </div>
   </header>
 
+  <nav class="tabs" role="tablist">
+    <button class="tab active" type="button" data-tab="tri" role="tab"><span class="ic">🔺</span> Triangulação / Venda à Ordem</button>
+    <button class="tab" type="button" data-tab="mdfe" role="tab"><span class="ic">🚚</span> MDF-e / Manifesto de Carga</button>
+  </nav>
+
+  <div class="pane active" id="pane-tri">
   <section class="card" id="form-card">
     <div class="card-head">
       <div>
@@ -324,6 +372,64 @@ footer{color:var(--text-3);font-size:12.5px;text-align:center;margin-top:28px;li
     </div>
     </div>
   </section>
+  </div><!-- /pane-tri -->
+
+  <div class="pane" id="pane-mdfe">
+  <section class="card" id="m-card">
+    <div class="card-head">
+      <div>
+        <h2>Simulador de MDF-e — retirada e entrega</h2>
+        <p>Responde se a operação exige Manifesto Eletrônico de Documentos Fiscais, quem emite e encerra, e gera a mensagem pronta para o cliente. Base: <b>Ajuste SINIEF 21/2010</b> • SEFAZ-CE.</p>
+      </div>
+      <button class="btn" type="button" id="m-limpar">Limpar</button>
+    </div>
+    <form id="m-form" autocomplete="off" novalidate>
+      <div class="section">
+        <h3 class="section-title"><span class="num">1</span> Comprador</h3>
+        <div class="seg seg-big">
+          <label><input type="radio" name="m-comprador" value="pf"><span><b>Pessoa Física</b> (CPF)</span></label>
+          <label><input type="radio" name="m-comprador" value="pj"><span><b>Pessoa Jurídica</b> (CNPJ)</span></label>
+        </div>
+      </div>
+      <div class="section">
+        <h3 class="section-title"><span class="num">2</span> Quem transporta a mercadoria</h3>
+        <div class="seg seg-big seg-col">
+          <label><input type="radio" name="m-transp" value="loja"><span><b>A loja entrega</b> com veículo próprio</span></label>
+          <label><input type="radio" name="m-transp" value="cliente"><span><b>O cliente retira</b> com veículo próprio ou alugado</span></label>
+          <label><input type="radio" name="m-transp" value="transportadora"><span><b>Transportadora</b>, motorista de excursão ou ônibus de frete</span></label>
+          <label><input type="radio" name="m-transp" value="app"><span><b>Uber Flash, motoboy ou app</b> de entrega urbana</span></label>
+        </div>
+      </div>
+      <div class="section">
+        <h3 class="section-title"><span class="num">3</span> Destino da mercadoria</h3>
+        <div class="seg seg-big">
+          <label><input type="radio" name="m-dest" value="mesmo"><span><b>Mesmo município</b> da loja (Fortaleza)</span></label>
+          <label><input type="radio" name="m-dest" value="ce"><span><b>Outro município</b> do Ceará</span></label>
+          <label><input type="radio" name="m-dest" value="uf"><span><b>Outro estado</b></span></label>
+        </div>
+        <div class="grid" style="margin-top:14px">
+          <div class="col-6"><label class="lbl" for="m-nome">Nome do cliente <span class="sub">(opcional, entra na mensagem)</span></label><input class="input" id="m-nome" placeholder="Ex.: João / Construtora XYZ"></div>
+          <div class="col-6"><label class="lbl" for="m-nf">Nº da NF-e <span class="sub">(opcional)</span></label><input class="input mono" id="m-nf" placeholder="Ex.: 123456"></div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card tone-dep" id="m-res" style="padding:0;overflow:hidden">
+    <div class="r-head" id="m-head"></div>
+    <div class="r-body">
+      <div class="m-grid" id="m-blocks"></div>
+      <div class="r-sec" style="margin-top:18px">Mensagem pronta para o cliente (WhatsApp)</div>
+      <div class="wa" id="m-wa"></div>
+      <div class="base-legal" id="m-base" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section class="card faq" id="m-faq">
+    <div class="card-head"><div><h2>Tirar dúvidas — MDF-e no dia a dia da expedição</h2><p>Respostas curtas conforme as regras da loja (SEFAZ-CE / Ajuste SINIEF 21/2010). Clique para abrir.</p></div></div>
+    <div id="m-faq-list"></div>
+  </section>
+  </div><!-- /pane-mdfe -->
 
   <footer>
     Ferramenta de apoio operacional • Consulte sempre o setor fiscal/contábil para regimes especiais. Consulta cadastral via BrasilAPI / CNPJ.ws<br>
@@ -785,6 +891,152 @@ $('#form').addEventListener('submit', (ev) => {
 });
 
 $('#btn-print').addEventListener('click', () => window.print());
+
+/* ============================================================
+   ABAS
+   ============================================================ */
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + id));
+  if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+if (location.hash === '#mdfe') showTab('mdfe');
+window.addEventListener('hashchange', () => showTab(location.hash === '#mdfe' ? 'mdfe' : 'tri'));
+
+/* ============================================================
+   MDF-e — motor de regras (SEFAZ-CE / Ajuste SINIEF 21/2010)
+   ============================================================ */
+const LOJA = 'a ' + EMITENTE.rotulo.split(' ')[0].charAt(0) + EMITENTE.rotulo.split(' ')[0].slice(1).toLowerCase();
+const LOJA_MUN = EMITENTE.municipio;
+function mdfe(i) {
+  const nomeTxt = i.nome ? `, ${i.nome}` : '';
+  const nfTxt = i.nf ? ` (NF-e nº ${i.nf})` : '';
+  const saud = `Olá${nomeTxt}! `;
+  const destTxt = i.dest === 'uf' ? 'outro estado' : (i.dest === 'ce' ? 'outro município' : 'outro município/estado');
+  const base = (r) => `Base: <b>Ajuste SINIEF 21/2010</b> (MDF-e obrigatório no transporte <b>interestadual e intermunicipal</b> de carga; emitido por quem realiza o transporte — transportadora ou contribuinte com veículo próprio) • Regra interna nº ${r} definida pelo setor fiscal (SEFAZ-CE).`;
+
+  /* REGRA 1 — pessoa física */
+  if (i.comprador === 'pf') return {
+    resp: 'NÃO', tone: 'dir', regra: 'Regra 1 — Comprador Pessoa Física (CPF)',
+    titulo: 'Não exige MDF-e: venda para pessoa física',
+    desc: 'Compra de pessoa física circula apenas com a NF-e ou NFC-e, qualquer que seja o destino ou o veículo. Não se pede placa nem CNH.',
+    quem: 'Ninguém', quemCls: 'none', quemTxt: 'Nenhuma das partes emite MDF-e nesta operação.',
+    loja: ['Emitir a <b>NF-e ou NFC-e</b> normalmente', '<b>Não</b> pedir placa, CNH ou CPF de motorista', '<b>Não</b> emitir MDF-e'],
+    msg: saud + `Sua compra${nfTxt} segue apenas com a nota fiscal. Como a venda é para pessoa física (CPF), não é necessário MDF-e nem informar placa ou CNH do motorista. Qualquer dúvida estamos à disposição!`,
+    base: base(1)
+  };
+
+  /* REGRA 2 / 6 — mesmo município */
+  if (i.dest === 'mesmo') {
+    const app = i.transp === 'app';
+    return {
+      resp: 'NÃO', tone: 'dir', regra: app ? 'Regra 6 — Entrega urbana por app (mesmo município)' : `Regra 2 — Entrega dentro do mesmo município (${LOJA_MUN})`,
+      titulo: `Não exige MDF-e: circulação dentro de ${LOJA_MUN}`,
+      desc: app ? 'Entrega urbana por Uber Flash, motoboy ou app dentro do município não exige MDF-e. Circula apenas com a NF-e.' : `Entrega ou retirada para o mesmo município da loja não exige MDF-e, mesmo para CNPJ ou em caminhão. Circula apenas com a NF-e.`,
+      quem: 'Ninguém', quemCls: 'none', quemTxt: 'O MDF-e só é exigido em transporte intermunicipal ou interestadual.',
+      loja: ['Emitir a <b>NF-e</b> normalmente', '<b>Não</b> pedir placa ou CNH', '<b>Não</b> emitir MDF-e'],
+      msg: saud + `Sua mercadoria${nfTxt} será ${app ? 'entregue pelo app' : 'liberada'} apenas com a nota fiscal. Como a entrega é dentro de ${LOJA_MUN}, não é exigido MDF-e nem placa/CNH do motorista. Obrigado pela preferência!`,
+      base: base(app ? 6 : 2)
+    };
+  }
+
+  /* Faltam dados? */
+  const faltam = [];
+  if (!i.comprador) faltam.push('O comprador é pessoa física (CPF) ou pessoa jurídica (CNPJ)?');
+  if (!i.dest) faltam.push(`A mercadoria fica em ${LOJA_MUN} ou vai para outro município/estado?`);
+  if (!i.transp) faltam.push('Quem vai transportar: a loja, o próprio cliente, uma transportadora/excursão/ônibus ou um app de entrega?');
+  if (faltam.length) return {
+    resp: 'DEPENDE', tone: 'dep', regra: 'Informações insuficientes',
+    titulo: 'Depende: preciso de mais ' + (faltam.length === 1 ? '1 informação' : '2 informações') + ' para cravar a resposta',
+    desc: 'Responda as perguntas abaixo (no formulário) e o resultado atualiza automaticamente.',
+    pend: faltam.slice(0, 2),
+    quem: '—', quemCls: 'none', quemTxt: 'Definido após as respostas.', loja: [], msg: '', base: ''
+  };
+
+  /* CNPJ saindo do município */
+  if (i.transp === 'transportadora') return {
+    resp: 'SIM', tone: 'div', regra: 'Regra 3 — Transportadora / excursão / ônibus de frete',
+    titulo: `Exige MDF-e, mas quem emite é a transportadora — ${LOJA.replace('a ', 'a ')} não emite`,
+    desc: `Transporte para ${destTxt} feito por transportadora, motorista de excursão ou ônibus de frete: a obrigação de emitir e encerrar o MDF-e é do transportador. A loja entrega apenas a NF-e e não pede placa nem CNH.`,
+    quem: 'A Transportadora', quemCls: '', quemTxt: 'Emite o MDF-e antes de iniciar a viagem e encerra ao concluir a entrega, no sistema dela.',
+    loja: ['Entregar a <b>NF-e (DANFE)</b> e o XML ao transportador', '<b>Não</b> pedir placa, CNH ou CPF de motorista', '<b>Não</b> emitir MDF-e', 'Registrar na NF-e o transportador (grupo <code>transporta</code>), se conhecido'],
+    msg: saud + `Sua mercadoria${nfTxt} está liberada e segue com a nota fiscal. Como o transporte será feito por transportadora/excursão/ônibus, o MDF-e é emitido pela própria transportadora — a loja não precisa de placa ou CNH. Lembre a transportadora de encerrar o MDF-e ao finalizar a entrega. Obrigado!`,
+    base: base(3)
+  };
+  if (i.transp === 'cliente') return {
+    resp: 'SIM', tone: 'div', regra: 'Regra 4 — Cliente CNPJ retira com veículo próprio ou alugado',
+    titulo: 'Exige MDF-e, emitido e encerrado pelo próprio cliente (carga própria)',
+    desc: `Cliente pessoa jurídica retirando com veículo próprio ou alugado para ${destTxt}: é transporte de carga própria do comprador. O MDF-e é obrigação do cliente, no sistema fiscal dele. A loja não emite MDF-e para o cliente levar; entrega apenas a NF-e.`,
+    quem: 'O Cliente', quemCls: '', quemTxt: 'Emite o MDF-e no sistema dele antes de sair da loja e encerra ao chegar ao destino.',
+    loja: ['Entregar a <b>NF-e (DANFE)</b> e o XML ao cliente', '<b>Não</b> emitir MDF-e em nome do cliente', 'Orientar o cliente a emitir o MDF-e <b>antes de sair</b> da loja e a <b>encerrar</b> ao concluir', 'Placa e CNH são informadas pelo cliente no MDF-e dele, não para a loja'],
+    msg: saud + `Sua mercadoria${nfTxt} está liberada para retirada com a nota fiscal. Como a retirada é com veículo próprio para ${destTxt}, a legislação (Ajuste SINIEF 21/2010) exige MDF-e de carga própria, emitido pela sua empresa no seu sistema fiscal, informando placa e CPF/CNH do motorista. Lembre de encerrar o MDF-e assim que a entrega for concluída. Qualquer dúvida, estamos à disposição!`,
+    base: base(4)
+  };
+  if (i.transp === 'loja') return {
+    resp: 'SIM', tone: 'div', regra: 'Regra 5 — A loja entrega com veículo próprio',
+    titulo: `Exige MDF-e emitido pela loja — placa e CPF/CNH do motorista obrigatórios`,
+    desc: `Entrega para ${destTxt} com veículo da própria loja: a loja emite o MDF-e antes de sair, informa placa e condutor, e encerra o manifesto assim que a entrega for concluída.`,
+    quem: 'A Loja', quemCls: '', quemTxt: 'Emite antes de iniciar o transporte e encerra (evento de encerramento) ao concluir a entrega.',
+    loja: ['Emitir o <b>MDF-e antes da saída</b> do veículo, vinculando a chave da NF-e', 'Informar <b>placa e UF do veículo</b>', 'Informar <b>CPF e nome do condutor</b> (CNH)', 'Imprimir o <b>DAMDFE</b> para acompanhar a carga junto com o DANFE', '<b>Encerrar o MDF-e</b> assim que a entrega concluir, antes de reutilizar o veículo em nova viagem'],
+    msg: saud + `Sua mercadoria${nfTxt} será entregue pelo nosso veículo. Como o destino é ${destTxt}, a loja emitirá o MDF-e com a placa e o motorista responsável, conforme a legislação (Ajuste SINIEF 21/2010). Não precisa de nenhuma providência da sua parte — ao concluir a entrega, nós encerramos o manifesto. Obrigado pela preferência!`,
+    base: base(5)
+  };
+  /* app fora do município: não coberto pelas regras */
+  return {
+    resp: 'DEPENDE', tone: 'dep', regra: 'Fora das regras definidas — app de entrega para outro município/estado',
+    titulo: 'Depende: entrega por app só está prevista para o mesmo município',
+    desc: `A Regra 6 dispensa o MDF-e apenas para entrega urbana dentro de ${LOJA_MUN}. Para ${destTxt}, o entregador por app atua como transportador — confirme com o setor fiscal antes de liberar.`,
+    pend: ['O entregador é autônomo contratado pela loja ou pelo cliente? (define quem é o transportador)', 'É possível usar transportadora ou veículo próprio da loja nessa entrega?'],
+    quem: 'Consultar fiscal', quemCls: 'none', quemTxt: 'Não há regra interna que cubra este caso; não libere sem orientação do fiscal.',
+    loja: ['<b>Não</b> liberar a carga até orientação do setor fiscal', 'Alternativa segura: transportadora (Regra 3) ou veículo da loja com MDF-e (Regra 5)'],
+    msg: saud + `Para a entrega${nfTxt} em ${destTxt} por app precisamos confirmar o procedimento do manifesto de carga com o nosso setor fiscal. Retornamos em instantes com a orientação. Obrigado pela compreensão!`,
+    base: base('—')
+  };
+}
+
+function mColeta() {
+  return { comprador: radio('m-comprador') || '', transp: radio('m-transp') || '', dest: radio('m-dest') || '', nome: $('#m-nome').value.trim(), nf: $('#m-nf').value.trim() };
+}
+let mUltimo = null;
+function mRender() {
+  const R = mdfe(mColeta()); mUltimo = R;
+  const res = $('#m-res'); res.className = 'card tone-' + R.tone; res.style.padding = '0'; res.style.overflow = 'hidden';
+  $('#m-head').innerHTML = `<span class="pill"><span class="dot"></span>Exige MDF-e? ${esc(R.resp)}</span><h2>${esc(R.titulo)}</h2><p>${esc(R.desc)}</p>
+    <div class="stats"><div class="stat"><b>${esc(R.resp)}</b>exige MDF-e</div><div class="stat"><b>${esc(R.quem)}</b>emite e encerra</div><div class="stat"><b>${esc(R.regra.split(' — ')[0])}</b>${esc(R.regra.split(' — ')[1] || '')}</div></div>`;
+  if (R.pend) {
+    $('#m-blocks').innerHTML = `<div class="m-box" style="grid-column:1/-1"><div class="h">Perguntas para concluir (máx. 2)</div><div class="b pend">${R.pend.map((q, i) => `<div class="q"><i>${i + 1}</i>${esc(q)}</div>`).join('')}</div></div>`;
+  } else {
+    $('#m-blocks').innerHTML = `
+      <div class="m-box"><div class="h">Quem deve emitir e encerrar</div><div class="b"><span class="who-chip ${R.quemCls}">${esc(R.quem)}</span><p style="margin:10px 0 0;font-size:13.5px;color:var(--text-2)">${esc(R.quemTxt)}</p></div></div>
+      <div class="m-box"><div class="h">O que a loja faz na expedição</div><div class="b"><ul>${R.loja.map(l => `<li>${l}</li>`).join('')}</ul></div></div>`;
+  }
+  $('#m-wa').innerHTML = R.msg ? `<div class="h"><span>Copiar e colar no WhatsApp do cliente</span><div class="acts"><button class="btn btn-sm" type="button" id="m-copiar">Copiar mensagem</button><a class="btn btn-sm btn-wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(R.msg)}">Abrir no WhatsApp</a></div></div><div class="msg">${esc(R.msg)}</div>`
+    : `<div class="msg" style="color:var(--text-3)">A mensagem para o cliente aparece aqui assim que o cenário estiver definido.</div>`;
+  const cb = document.getElementById('m-copiar');
+  if (cb) cb.addEventListener('click', async () => { try { await navigator.clipboard.writeText(R.msg); cb.textContent = 'Copiado!'; setTimeout(() => cb.textContent = 'Copiar mensagem', 1800); } catch { alert('Não foi possível copiar automaticamente.'); } });
+  $('#m-base').innerHTML = R.base || ''; $('#m-base').style.display = R.base ? '' : 'none';
+}
+$('#m-form').addEventListener('change', mRender);
+$('#m-form').addEventListener('input', mRender);
+$('#m-limpar').addEventListener('click', () => { $('#m-form').reset(); mRender(); });
+
+const FAQ = [
+  ['Regra 1', 'Cliente pessoa física (CPF) vai levar a compra para outro estado de carro. Precisa de MDF-e?', '<b>Não.</b> Venda para pessoa física nunca exige MDF-e, independentemente do destino ou do veículo. Circula apenas com a NF-e ou NFC-e. Não peça placa nem CNH.'],
+  ['Regra 2', `Cliente CNPJ retira de caminhão e vai entregar dentro de ${EMITENTE.municipio}. Precisa de MDF-e?`, `<b>Não.</b> Transporte dentro do mesmo município da loja não exige MDF-e, mesmo para CNPJ e mesmo em caminhão. Circula só com a NF-e.`],
+  ['Regra 3', 'A mercadoria vai por transportadora, ônibus de frete ou excursão para outro município. A loja emite o MDF-e?', '<b>Não.</b> Quem emite e encerra é a transportadora (ou o responsável pela excursão/ônibus). A loja entrega apenas a NF-e e não pede placa nem CNH do motorista.'],
+  ['Regra 4', 'Cliente CNPJ retira com veículo próprio e leva para Sobral. Quem emite o MDF-e?', '<b>O próprio cliente</b>, no sistema fiscal dele, como transporte de carga própria. Exige MDF-e, mas a loja não emite e não entrega manifesto para o cliente levar — apenas a NF-e. Oriente o cliente a emitir antes de sair e encerrar ao chegar.'],
+  ['Regra 4', 'Cliente CNPJ veio com veículo alugado. Muda alguma coisa?', '<b>Não muda.</b> Veículo alugado é tratado como veículo do cliente: exige MDF-e emitido e encerrado pelo cliente. A loja só entrega a NF-e.'],
+  ['Regra 5', 'A loja vai entregar com o caminhão próprio em outro município. O que precisa?', '<b>MDF-e emitido pela loja antes da saída</b>, com placa e UF do veículo, CPF e nome do motorista (CNH), vinculando a chave da NF-e. Imprima o DAMDFE para acompanhar a carga e <b>encerre o MDF-e assim que a entrega concluir</b>.'],
+  ['Regra 5', 'O motorista da loja fez a entrega e voltou. Precisa fazer mais alguma coisa?', '<b>Sim: encerrar o MDF-e.</b> O manifesto deve ser encerrado ao concluir a entrega. MDF-e aberto gera pendência para a loja e para o veículo em fiscalização e em novos manifestos.'],
+  ['Regra 6', 'Entrega por Uber Flash ou motoboy dentro de Fortaleza precisa de MDF-e?', '<b>Não.</b> Entrega urbana por app dentro do mesmo município não exige MDF-e. Vai só com a NF-e.'],
+  ['Regra 6', 'E Uber/motoboy para outro município, como Caucaia ou Maracanaú?', '<b>Depende — fora das regras definidas.</b> A dispensa só vale dentro do município. Para outro município o entregador atua como transportador; não libere sem orientação do setor fiscal. Alternativa segura: transportadora (Regra 3) ou veículo da loja com MDF-e (Regra 5).'],
+  ['Geral', 'O cliente CNPJ pediu para a loja emitir o MDF-e "para ele levar". Pode?', '<b>Não.</b> Quando o cliente retira com veículo próprio, o MDF-e é obrigação dele (carga própria do comprador). A loja só emite MDF-e quando o transporte é feito com veículo da própria loja (Regra 5).'],
+  ['Geral', 'Quando a loja pede placa e CNH?', '<b>Somente na Regra 5</b> (entrega com veículo próprio da loja para outro município ou estado), porque esses dados entram no MDF-e emitido pela loja. Nos demais casos a loja não pede placa nem CNH.'],
+  ['Geral', 'Qual é a base legal?', '<b>Ajuste SINIEF 21/2010</b>, que institui o MDF-e e o torna obrigatório no transporte <b>interestadual e intermunicipal</b> de carga, emitido por quem realiza o transporte (transportadora ou contribuinte com veículo próprio), com encerramento ao final do percurso. As seis regras acima são a aplicação prática definida pelo setor fiscal da loja para a SEFAZ-CE.'],
+];
+$('#m-faq-list').innerHTML = FAQ.map(([t, q, a]) => `<details><summary><span><span class="tag">${esc(t)}</span>${esc(q)}</span></summary><div class="a">${a}</div></details>`).join('');
+mRender();
 $('#btn-copiar').addEventListener('click', async () => {
   if (!ultimo) return;
   const strip = (h) => String(h).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");

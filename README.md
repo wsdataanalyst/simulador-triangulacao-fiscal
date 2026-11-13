@@ -14,6 +14,16 @@ Ferramenta de apoio operacional para o setor comercial/fiscal: informa o CNPJ do
 | Comprador contribuinte, **uso/consumo/obra** | Entrega em local diverso | 1 NF-e com grupo `<entrega>` |
 | Comprador **não contribuinte** | Não cabe venda à ordem | 1 NF-e com grupo `<entrega>` + DIFAL (EC 87/2015) |
 
+## Aba MDF-e (Manifesto de Carga)
+
+Segunda aba da ferramenta (`#mdfe`): simulador de **MDF-e** para retirada e entrega, conforme as seis regras definidas pelo setor fiscal (SEFAZ-CE / Ajuste SINIEF 21/2010). Com três respostas (comprador CPF/CNPJ, quem transporta, destino) informa:
+
+1. **Exige MDF-e?** SIM / NÃO / DEPENDE (com até duas perguntas pendentes quando faltar informação).
+2. **Quem emite e encerra:** a loja, o cliente, a transportadora ou ninguém.
+3. **Mensagem pronta** para o vendedor copiar ou abrir direto no WhatsApp do cliente.
+
+Inclui a seção "Tirar dúvidas" com perguntas frequentes da expedição. As regras estão na função `mdfe()` em `index.html`.
+
 ## Consulta cadastral
 
 - [BrasilAPI](https://brasilapi.com.br) — razão social, UF/município, CNAE, situação cadastral, Simples Nacional.
